@@ -15,18 +15,19 @@ Usage:
     ...
     # Code to load/create template file as string, utf-8
     ...
+
     client = GitClient(
-        name="Preocts",
-        email="preocts@preocts.com",
-        owner="preocts",
-        repo="my_test_repo",
-        oauth="[OAuth Secret],
+        name="YOUR GITHUB NAME",
+        email="ASSOCIATED EMAIL",
+        owner="REPO-OWNER",  # (github.com/[OWNER]/[REPONAME])
+        repo="REPO-NAME",
+        oauth="[OAuth Secret Token]",
     )
     client.send_template(
         base_branch="main",
         new_branch="my_cool_branch,
         file_name="cool_template_file.md",
-        file_contents="string_of_file",
+        file_contents="# Hello World",
         pr_title="Pull request Title",
         pr_content="Pull request message",
     )

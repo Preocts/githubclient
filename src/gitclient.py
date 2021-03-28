@@ -60,7 +60,7 @@ class GitClient:
         self._owner = owner
         self._repo = repo
         self.__oauth = oauth
-        self.client = http.client.HTTPSConnection("github.com")
+        self.client = http.client.HTTPSConnection("api.github.com")
 
     def __str__(self) -> str:
         """ REPL """
@@ -70,6 +70,7 @@ class GitClient:
         """ create headers with auth token """
         return {
             "Accept": "application.vnd.github.v3+json",
+            "User-Agent": self._name,
             "Authorization": f"token {self.__oauth}",
         }
 
@@ -81,15 +82,16 @@ class GitClient:
         # Decode response
         # TODO error handling
         result = json.loads(self.client.getresponse().read().decode("utf-8"))
-
         return result
 
     def get_branch_sha(self, branch_name: str) -> Optional[str]:
         """ Get the SHA of the base branch """
         # https://docs.github.com/en/rest/reference/repos#get-a-branch
+
+        self.logger.debug("Requesting branch SHA")
         self.client.request(
             "GET",
-            f"/api/v3/repos/{self._owner}/{self._repo}/branches/{branch_name}",
+            f"/repos/{self._owner}/{self._repo}/branches/{branch_name}",
             None,
             self.__headers(),
         )
@@ -107,7 +109,9 @@ class GitClient:
     def create_branch(self, base_branch: str, new_branch: str) -> Optional[str]:
         """ Creates branch from base branch, return SHA of new branch """
         # https://docs.github.com/en/rest/reference/git#create-a-reference
-        endpoint = f"/api/v3/repos/{self._owner}/{self._repo}/git/refs"
+
+        self.logger.debug("Creating Branch")
+        endpoint = f"/repos/{self._owner}/{self._repo}/git/refs"
         payload = {
             "ref": f"refs/heads/{new_branch}",
             "sha": self.get_branch_sha(base_branch),
@@ -122,7 +126,9 @@ class GitClient:
     def create_blob(self, file_contents: str) -> str:
         """ Create blob of the file_contents, returns SHA reference """
         # https://docs.github.com/en/rest/reference/git#create-a-blob
-        endpoint = f"/api/v3/repos/{self._owner}/{self._repo}/git/blobs"
+
+        self.logger.debug("Creating Blob")
+        endpoint = f"/repos/{self._owner}/{self._repo}/git/blobs"
         payload = {
             "owner": self._owner,
             "repo": self._repo,
@@ -135,7 +141,9 @@ class GitClient:
     def create_blob_tree(self, branch_sha: str, file_name: str, blob_sha: str) -> str:
         """ Create a tree link to blob, returns tree sha for commit """
         # https://docs.github.com/en/rest/reference/git#create-a-tree
-        endpoint = f"/api/v3/repos/{self._owner}/{self._repo}/git/trees"
+
+        self.logger.debug("Creating Tree")
+        endpoint = f"/repos/{self._owner}/{self._repo}/git/trees"
         payload = {
             "base_tree": branch_sha,
             "owner": self._owner,
@@ -154,7 +162,9 @@ class GitClient:
     def create_commit(self, branch_sha: str, tree_sha: str) -> str:
         """ Creates commit to branch """
         # https://docs.github.com/en/rest/reference/git#create-a-blob
-        endpoint = f"/api/v3/repos/{self._owner}/{self._repo}/git/commits"
+
+        self.logger.debug("Create commit")
+        endpoint = f"/repos/{self._owner}/{self._repo}/git/commits"
         payload = {
             "message": "Auto commit by AIM Orc WatchTower",
             "author": {
@@ -170,9 +180,9 @@ class GitClient:
     def update_reference(self, branch_name: str, commit_sha: str) -> dict:
         """ Create or update the reference of a branch """
         # https://docs.github.com/en/rest/reference/git#update-a-reference
-        endpoint = (
-            f"/api/v3/repos/{self._owner}/{self._repo}/git/refs/heads/{branch_name}"
-        )
+
+        self.logger.debug("Update branch ref")
+        endpoint = f"/repos/{self._owner}/{self._repo}/git/refs/heads/{branch_name}"
         payload = {
             "ref": f"refs/heads/{branch_name}",
             "sha": commit_sha,
@@ -185,7 +195,9 @@ class GitClient:
     ) -> dict:
         """ Create PR from head_branch -> base_branch """
         # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
-        endpoint = f"/api/v3/repos/{self._owner}/{self._repo}/pulls"
+
+        self.logger.debug("Create pull request")
+        endpoint = f"/repos/{self._owner}/{self._repo}/pulls"
         payload = {
             "owner": self._owner,
             "repo": self._repo,

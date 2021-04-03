@@ -170,7 +170,7 @@ class GitClient:
 
     def create_commit(self, branch_sha: str, tree_sha: str) -> str:
         """ Creates commit to branch """
-        # https://docs.github.com/en/rest/reference/git#create-a-blob
+        # https://docs.github.com/en/rest/reference/git#create-a-commit
 
         self.logger.debug("Create commit")
         endpoint = f"/repos/{self._owner}/{self._repo}/git/commits"

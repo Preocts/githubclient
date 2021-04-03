@@ -6,6 +6,7 @@ This class gives the methods needed to accomplish the following:
     - Upload a template file to the branch
     - Commit the file to the new branch
     - Create a pull request for new branch to source branch
+    - Add labels to the pull request
 
 Author: Preocts <preocts@preocts.com>
 
@@ -30,11 +31,15 @@ Usage:
         file_contents="# Hello World",
         pr_title="Pull request Title",
         pr_content="Pull request message",
+        labels=["Awesome", ":rooDuck:"]
     )
 """
+import re
 import json
 import logging
 import http.client
+from string import printable
+from typing import List
 from typing import Optional
 
 
@@ -76,9 +81,19 @@ class GitClient:
         }
 
     def _git_post(self, endpoint: str, payload: dict) -> dict:
-        """ Private: Handles all posts to git. `operation` is used for influx key """
+        """ Private: Handles all posts to git. """
 
         self.client.request("POST", endpoint, json.dumps(payload), self.__headers())
+
+        # Decode response
+        # TODO error handling
+        result = json.loads(self.client.getresponse().read().decode("utf-8"))
+        return result
+
+    def _git_get(self, endpoint: str) -> dict:
+        """ Private: Handles all GET to github. """
+
+        self.client.request("GET", endpoint, None, self.__headers())
 
         # Decode response
         # TODO error handling
@@ -90,16 +105,9 @@ class GitClient:
         # https://docs.github.com/en/rest/reference/repos#get-a-branch
 
         self.logger.debug("Requesting branch SHA")
-        self.client.request(
-            "GET",
-            f"/repos/{self._owner}/{self._repo}/branches/{branch_name}",
-            None,
-            self.__headers(),
-        )
+        endpoint = f"/repos/{self._owner}/{self._repo}/branches/{branch_name}"
 
-        # Decode response
-        # TODO error handling
-        result = json.loads(self.client.getresponse().read().decode("utf-8"))
+        result = self._git_get(endpoint)
 
         sha = result.get("commit", {}).get("sha")
         if sha is None:
@@ -193,7 +201,7 @@ class GitClient:
 
     def create_pull_request(
         self, base_branch: str, head_branch: str, pr_title: str, pr_body: str
-    ) -> dict:
+    ) -> Optional[int]:
         """ Create PR from head_branch -> base_branch """
         # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
 
@@ -209,7 +217,75 @@ class GitClient:
             "maintainer_can_modify": True,
         }
 
-        return self._git_post(endpoint, payload)
+        number = self._git_post(endpoint, payload).get("number")
+
+        return number if number else self.recover_pull_request(head_branch)
+
+    def recover_pull_request(self, head_branch: str) -> Optional[int]:
+        """ Attempts to find existing PR by branch name, fails if more/less than 1 """
+        # https://docs.github.com/en/rest/reference/issues#list-repository-issues
+        params = f"?head={head_branch}"
+        endpoint = f"/repos/{self._owner}/{self._repo}/pulls{params}"
+
+        result = self._git_get(endpoint)
+
+        if not isinstance(result, list) or len(result) > 1:
+            self.logger.warning("Unable to find exact PR for '%s'", head_branch)
+            return None
+
+        return result[0].get("number") if result else None
+
+    def add_lables(self, number: int, labels: List[str]) -> None:
+        """ Add labels to a pull request """
+        # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
+
+        self.logger.debug("Add labels")
+        endpoint = f"repo/{self._owner}/{self._repo}/issues/{number}/labels"
+        payload = {
+            "labels": labels,
+        }
+
+        if labels:
+            self._git_post(endpoint, payload)
+
+    def _clean_string(
+        self,
+        input_: str,
+        clean_spaces: bool = False,
+        is_branch: bool = False,
+        is_file: bool = False,
+    ) -> str:
+        """
+        Strips all non-printable characters from input. Trims leading/trailing space
+
+        Args:
+            clean_space: If true will replace spaces with underscores
+            is_branch: If true will strip illegal branch characters
+            is_file: If true will strip illegal filename characters
+        """
+        result = ""
+        # Regex to find forbidden characters in github branch name
+        # https://stackoverflow.com/questions/3651860
+        branch_rules = r"/^[\.\/]|\.\.|@{|[\/\.]$|^@$|[~^:\x00-\x20\x7F\s?*[\]\\]"
+        # Regex to find forbidden characters in filename
+        file_rules = r'[\\/:"*?<>|]+'
+
+        for char in input_:
+            if char in printable:
+                result += char
+
+        if clean_spaces:
+            result = result.replace(" ", "_")
+
+        if is_branch:
+            result = re.sub(branch_rules, "", result)
+
+        if is_file:
+            result = re.sub(file_rules, "", result)
+
+        if input_ != result:
+            self.logger.debug("String altered: '%s' -> '%s'", input_, result)
+        return result.strip(" ")
 
     def send_template(
         self,
@@ -218,7 +294,7 @@ class GitClient:
         file_name: str,
         file_contents: str,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         """
         Creates a new branch on defined repo, uploads template, makes PR
 
@@ -231,25 +307,36 @@ class GitClient:
         Optional Keyword Args:
             pr_title [str]: Title of the pull request
             pr_content [str]: Conent of pull request message
+            labels [List[str]]: String of labels to apply to pull request
         """
         pr_title = kwargs.get("pr_title", "New automated request")
         pr_body = kwargs.get("pr_content", "Automated PR")
+        labels: List[str] = kwargs.get("labels", [])
 
-        clean_branch_name = new_branch.replace(" ", "_")
-        clean_file_name = file_name.replace(" ", "_")
+        clean_branch_name = self._clean_string(new_branch, True, is_branch=True)
+        clean_file_name = self._clean_string(file_name, True, is_file=True)
 
         new_branch_sha = self.create_branch(base_branch, clean_branch_name)
 
-        if new_branch_sha is None:
+        if not new_branch_sha:
             self.logger.critical("Failed to find branch SHA, unable to continue.")
-            return
+            return False
 
-        blob_sha = self.create_blob(file_contents)
-
-        tree_sha = self.create_blob_tree(new_branch_sha, clean_file_name, blob_sha)
+        tree_sha = self.create_blob_tree(
+            new_branch_sha, clean_file_name, self.create_blob(file_contents)
+        )
 
         commit_sha = self.create_commit(new_branch_sha, tree_sha)
 
         self.update_reference(clean_branch_name, commit_sha)
 
-        self.create_pull_request(base_branch, clean_branch_name, pr_title, pr_body)
+        issue_number = self.create_pull_request(
+            base_branch, clean_branch_name, pr_title, pr_body
+        )
+
+        if not issue_number:
+            self.logger.critical("No issue number returned, unable to complete.")
+            return False
+
+        self.add_lables(issue_number, labels)
+        return True

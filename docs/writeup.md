@@ -1,16 +1,18 @@
-# Creating a branch, adding a file, and making a pull request with Github API
+# Create branch, add file, and make pull request using Github API
 
-In the endless search for inches of improvement, automation often rises to the challenge. This process involved a simple situation; throughout the week I would need to create a mark-down document, add it into a central repository, and make a pull request. The contents of the document are easy to template with just a few metadata fields that, programmatically, can be filled in automatically. Automating the git routine was the challenge to be overcome here.
+In the endless search for inches of improvement, automation often rises to the challenge. One such improvement I was looking for was to reduce the steps I took on a daily process within git an GitHub. This process involved a simple situation; throughout the week I would need to create a mark-down document, add it into a central repository, and make a pull request. I had already created a template of the document which had a few metadata fields that, programmatically, were filled in automatically. Automating the git routine was the challenge to be overcome here.
 
-So let us break the challenge down into the pieces that we need to accomplish and then look at each step in detail. While my code was done in Python and is linked at the end of this writeup, the steps below will focus more on the API steps. This means if you know how to send an HTTPS request in the language of your choice, you can use this writeup.
+To start, let us break the challenge down into the pieces that we need to accomplish and then look at each step in detail. While my code was done in Python and is linked at the end of this writeup, the steps below will focus more on the API of GitHub. This means if you know how to send an HTTPS request in the language of your choice, you can use this writeup.
 
 ### Steps to accomplish the goal (duplicating the manual actions):
 
 1. Create a new branch in the repo, using `main` as the base-branch
+   - `git checkout main`
+   - `git pull upstream main`
    - `git checkout -b summary04022021`
 1. Copy my template file into the repo, renaming it
    - `cp ~/templates/daily.md summary04022021.md`
-   - *An existing python would be used here to update the few pieces of metadata using a csv source file*
+   - *An existing python script would be used here to update the few pieces of metadata using a csv source file*
 1. Add the file to the stage
    - `git add summary04022021.md`
 1. Commit the change
@@ -18,15 +20,29 @@ So let us break the challenge down into the pieces that we need to accomplish an
 1. Push the changes to GitHub
    - `git push upstream HEAD`
 1. Log into GitHub and create a pull request
-   - *Button clicks, copy/paste a standard PR message, and submit*
+   - *Button clicks, copy/paste a standard PR message, add some labels, and submit*
 
-In total, the process would take 10-15 minutes of my day. Perfect for a little automation!
+In total, the process would take 5 to 10 minutes of my day depending on if GitHub wanted to force me to dig my password out or not. Perfect for a little automation!
+
+Below I'll walk though each of the steps as they translate to actions with the API. The payloads and routes will be detailed in each.
+
+*Note: This automation works for existing repos with at least one existing branch. It will not work without extra steps on an empty repo.*
 
 ---
 
-Getting started, we need to connect and authenticate with GitHub. The best path to accomplish this with a personal OAuth token. You can create one in your GitHub's personal account settings `Developer settings` -> `Personal Access Tokens`. There are a wide selection of permissions to select from when creating a token. For this project the only permission we need this OAuth key to have is `public_repo`. Create a token and save it in your `.env` file, or preferred method of loading secrets. (hopefully not your committed code)
+## Getting started: Accessing the API
 
-With the token secured, the next step is to define your headers. Simple enough for our application. We want to tell GitHub we're using their v3 API, who we are, and what our authorization is.
+### Authentication
+
+We need to authenticate ourselves with GitHub. Under this example the repo we want to interact with is a public repo, so no extra invites or setup is needed beyond our own GitHub account. We just need a personal OAuth token.
+
+You can create one in your GitHub's personal account settings `Developer settings` -> `Personal Access Tokens`. There are a wide selection of permissions to select from when creating a token. For this project the only permission we need this OAuth key to have is `public_repo`.
+
+Create a token and save it in your `.env` file, or preferred method of loading secrets. *Remember, this token is a password into your account. Don't keep it in anything that is being committed to your repo.*
+
+### Headers
+
+With the token secured, the next step is to define your headers. Simple enough for our application. We want to tell GitHub we're using their v3 API, who we are, and what our authorization token is.
 
 ```json
 {
@@ -36,9 +52,9 @@ With the token secured, the next step is to define your headers. Simple enough f
 }
 ```
 
-To send the two types of requests we'll need, POST and GET, to GitHub I just used Python's `https.client` library, which is a built-in. Again, any method will work here. You just need to send a POST or GET HTTPS request and have the ability to consume the JSON response as we'll need some information from each step to preform the next.
+To send the two types of requests we'll need, POST and GET, to GitHub I just used Python's `https.client` library, which is a built-in. Again, any method will work here. You just need to send a POST or GET HTTPS request and have the ability to consume the JSON response as we'll need to carry some information from each step forward to the next.
 
-## API v3 routes and payload
+### API v3 routes and payload
 
 A quick outline to some of the `[values]` I outline in the steps below:
 - `[owner]` : This is the orginization or owner of the repo, the first value in the URL when you navigate to the repo of choice.
@@ -57,21 +73,17 @@ Payloads can either be parameters, added to the URL of the call, or provided as 
 ---
 
 ## Create a branch and getting a branch SHA
+---
 
 To create the branch in GitHub we actually are creating a new reference point in the history of the repo. Each reference needs a starting point in the history which is the branch the new branch is created from. The API wants the first, our new branch, in the form of a branch name and the latter, the base branch, in the form of a SHA. So we have two steps to accomplish here.
 
-**Getting the base branch SHA**
+### Getting the base branch SHA
 
-Thankfully getting a branch SHA is a straight-forward. We make a GET request to the correct endpoint and receive a JSON object back that has the `sha` within it.
+Getting a branch SHA is a straight-forward. We make a GET request to the endpoint pointed at our base branch and receive a JSON object back that has the `sha` within it. This `sha` value will be used again in many of the steps to reference this point in the repo's history.
 
-*Route GET*
-```
-https://api.github.com/repos/[owner]/[repo]/branches/[branch_name]
-```
+**GET Route:** `https://api.github.com/repos/[owner]/[repo]/branches/[base_branch_name]`
 
-This will return a chunk of data in JSON form. We are only interested in the `commit:sha` value as that's what we need to make a new branch in the next step.
-
-*Truncated response*
+*Truncated response:*
 ```json
 {
   "name": "main",
@@ -85,11 +97,11 @@ This will return a chunk of data in JSON form. We are only interested in the `co
 }
 ```
 
-**Creating a new branch**
+### Creating a new branch
 
 With the sha of our base branch in hand, we can create the payload needed for creating a new branch and POST that to GitHub.
 
-*Payload*
+*Payload:*
 ```json
 {
     "ref": "refs/heads/[new_branch_name]",
@@ -97,20 +109,20 @@ With the sha of our base branch in hand, we can create the payload needed for cr
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/git/refs
-```
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/git/refs`
 
-You can see we used the SHA collected in the payload and included our own new branch name. This is creating a new reference *at the same point in the history* as our base branch.
+You can see we used the SHA collected in the payload and included our own new branch name. This is creating a new reference *at the same point in the history* as our base branch. If you inspect the returned response for this step, you'll see the new branch even has the same `sha`.
 
-## Making the file, create a blob
+## Create a blob
+---
 
-The next step in our manual process was to copy the template file into the repo's working directory. Through the API we'll do that in a two-step process of creating the blob, or binary large object, and then giving that object a name in the tree.  These two steps can be down in one, but I broke them out to keep things isolated.
+The next step in our manual process is to copy the template file into the repo's working directory. Through the API we'll do that by creating a blob, or binary large object. Blobs can be a lot of things but, for this situation, ours is just a simple plain-text file.
 
-Making a blob in a repo just requires what we have already and the actual file contents. If, like me, you are uploading a plain-text file then you can provide the contents in utf-8 encoding. If needed, you can also provide the content in base64 encoding.
+Making a blob in a repo just requires our repo information and the actual file contents. By default, GitHub will assume the blob is encoded in utf-8. If needed, base64 can be used.
 
-*Payload*
+The response will contain a SHA for the blob, we need that for the next step.
+
+*Payload:*
 ```json
 {
     "owner": "[REPO OWNER]",
@@ -120,14 +132,9 @@ Making a blob in a repo just requires what we have already and the actual file c
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/git/blobs
-```
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/git/blobs`
 
-The response will contain a SHA for this blob, we need that for the next step.
-
-*Response*
+*Response:*
 ```json
 {
   "url": "https://api.github.com/repos/preoct/gitclient/git/blobs/3a0f86fb8db8eea7ccbb9a95f325ddbedfb25e15",
@@ -135,13 +142,18 @@ The response will contain a SHA for this blob, we need that for the next step.
 }
 ```
 
-## Making a file, create a tree
+## Create a tree
+---
 
-Right now our blob just exists, without a home. This is the same as an untracked file in a working directory of a repo. GitHub knows the blob exists, but it isn't tracked in history. By creating a tree for this blob we will stage the blob and give it a file-path at the same time.
+Now our blob just exists, without a home. This is the same as an untracked file in a working directory of a repo. GitHub knows the blob exists, but it isn't tracked in history and won't be committed. By creating a tree for this blob we will stage the blob within the repo. At the same time, this will give the blob a filename and filepath.
 
-You'll notice we reuse the SHA from our base branch here as `base_branch`. That's because it's also the reference point of our new branch. They are at the same point in history right now, but that will change in two steps.
+You'll notice we reuse the SHA from our base branch here as `base_branch`. Remember, that is because both our base branch and our new branch reference the same point of history in the repo.
 
-*Payload*
+In the `tree` object you can see how we give our blob a filename. If we wanted to put that file into a directory we could use `daily/documents/our_filename_here.md` and the request will place the file in `./daily/documents` of the repo. The `mode` here tells GitHub our blob in this tree is just a file. The `sha` is from the response of our create a blob step.
+
+Once again, we're getting a `sha` back in the response that is needed for the next step.
+
+*Payload:*
 ```json
 {
     "base_tree": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
@@ -158,12 +170,9 @@ You'll notice we reuse the SHA from our base branch here as `base_branch`. That'
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/git/trees
-```
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/git/trees`
 
-*Response*
+*Response:*
 ```json
 {
   "sha": "cd8274d15fa3ae2ab983129fb037999f264ba9a7",
@@ -182,15 +191,14 @@ https://api.github.com/repos/[owner]/[repo]/git/trees
 }
 ```
 
-In the `tree` object you can see how we give our blob a filename. If we wanted to put that file into a directory we could use `daily/documents/our_filename_here.md` and the request will place the file in `./daily/documents` of the repo. The `mode` here tells GitHub our blob in this tree is just a file. The `sha` is from the response of our prior step.
-
-Once again, we're getting a SHA back in the response that is needed for the next step.
-
 ## Commit
+---
 
-Now that we've put a file on the stage, it's time to make a commit. Commits want to know what the parent branch is, what tree is being committed, the all-important commit message, and who is making the commit.
+Now that we've put a file on the stage, it is time to make a commit. Commits want to know what the parent branch is, what tree is being committed, the all-important commit message, and who is making the commit.
 
-*Payload*
+Here we use the tree `sha` from the last request, the branch `sha` we've been using, and add our GitHub account name with email to wrap it all up.  The response is verbose but has the now expected `sha` of our commit for the next step.
+
+*Payload:*
 ```json
 {
     "message": "Auto commit by automation!",
@@ -203,12 +211,9 @@ Now that we've put a file on the stage, it's time to make a commit. Commits want
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/git/commits
-```
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/git/commits`
 
-*Truncated Response*
+*Truncated Response:*
 ```json
 {
   "sha": "7638417db6d59f3c431d3e1f261cc637155684cd",
@@ -216,15 +221,14 @@ https://api.github.com/repos/[owner]/[repo]/git/commits
 }
 ```
 
-Here we use the tree `sha` from the last request, the branch `sha` we've been using, and add our GitHub account name with email to wrap it all up.  The response is verbose but has the now expected `sha` of our commit for the next step.
-
 ## Updating our new branch reference
+---
 
-To this point our new branch has been the same as the base branch we used to create it. Now that we have a new commit, or a new point in history, it's time to move the HEAD of our new branch forward to that commit.
+Up to this point, our new branch has been the same as the base branch we used to create it. Now that we have a new commit, or a new point in history, it is time to move the HEAD of our new branch forward to that commit.
 
-This should look familiar, it's very similar to making a branch.
+The `sha` here is from our commit. The branch name is the new branch we created in the first step.
 
-*Payload*
+*Payload:*
 ```json
 {
     "ref": "refs/heads/[NEW BRANCH NAME]",
@@ -232,18 +236,16 @@ This should look familiar, it's very similar to making a branch.
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/git/refs/heads/[NEW BRANCH NAME]
-```
-
-The `sha` here is from our commit. The branch name is the new branch we created in the first step.  With the reference updated and the HEAD of our new branch pointing at the commit containing our new file, it's time to make that pull request.
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/git/refs/heads/[NEW BRANCH NAME]`
 
 ## Pull request into main branch
+---
 
-The pull request need to know which branch is our HEAD and which is the base. It will create a pull from HEAD -> base.  This is made easier since this endpoint doesn't want any `sha` values, just the names of the branches.
+With the reference updated and the HEAD of our new branch pointing at the commit containing our new file, it's time to make that pull request. The pull request need to know which branch is our HEAD and which is the base. It will create a pull from HEAD -> base. This step doesn't want any of the `sha` values we've been using, just the names of the branches.
 
-*Payload*
+In the response there will be an `number` returned. For the final step, adding labels to the pull request, we'll need that number.
+
+*Payload:*
 ```json
 {
     "owner": "[REPO OWNER]",
@@ -256,14 +258,58 @@ The pull request need to know which branch is our HEAD and which is the base. It
 }
 ```
 
-*Route POST*
-```
-https://api.github.com/repos/[owner]/[repo]/pulls
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/pulls`
+
+*Truncated Response:*
+```json
+{
+  "url": "https://api.github.com/repos/preocts/gitclient/pulls/42",
+  ...
+  "number": 42,
+  "state": "open",
+  "locked": true,
+  "title": "Good title for automated PR",
+  ...
+}
 ```
 
-That's it. The pull request is in for review!
+## Add labels to pull request
+---
+
+The final step on the eight legged journey is to add a few labels to our pull request to make our reviewing team happy. To do this we need the `number` of the issue we'll be adding labels too. "Issue?" you may ask? Fun trivia fact: All pull requests in GitHub are issues, though not all issues are pull requests!
+
+Labels are provided in an array of strings. The API will helpfully create any label not already in existance with this call.
+
+*Payload:*
+```json
+{
+  "labels": [
+    "Review",
+    "Weekly"
+  ]
+}
+```
+
+**POST Route:** `https://api.github.com/repos/[owner]/[repo]/issues/[ISSUE NUMBER]/labels`
+
+With that, we've automated the entire manual process and can now fire off the template file with a single script run whenever needed.  An added bonus to this automation is that we don't need to keep a copy of the target repo on our local machine.
 
 ---
 
 ## API Documentation links
-...
+
+The entire process is fairly straight-forward to execute, once you've dug through enough of the GitHub documentation to know all the little steps. Finding the correct steps proved to be the tricky part of this task. GitHub has **a lot** of features.  Below is a list of the links I used for each of the steps above.  You'll find more details on the API route, response examples, and code examples.
+
+1. [GitHub API Documentation - Get a Branch](https://docs.github.com/en/rest/reference/repos#get-a-branch)
+1. [GitHub API Documentation - Create a reference](https://docs.github.com/en/rest/reference/git#create-a-reference)
+1. [GitHub API Documentation - Create a blob](https://docs.github.com/en/rest/reference/git#create-a-blob)
+1. [GitHub API Documentation - Create a tree](https://docs.github.com/en/rest/reference/git#create-a-tree)
+1. [GitHub API Documentation - Create a commit](https://docs.github.com/en/rest/reference/git#create-a-commit)
+1. [GitHub API Documentation - Update a reference](https://docs.github.com/en/rest/reference/git#update-a-reference)
+1. [GitHub API Documentation - Create a pull request](https://docs.github.com/en/rest/reference/pulls#create-a-pull-request)
+1. [GitHub API Documentation - Add labels to an issue](https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue)
+
+
+## Sample code
+
+My `gitclient` which uses all of the above steps in a Python class: [https://github.com/Preocts/gitclient/blob/main/src/githubclient/gitclient.py](https://github.com/Preocts/gitclient/blob/main/src/githubclient/gitclient.py)

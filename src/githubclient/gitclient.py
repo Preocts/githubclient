@@ -8,6 +8,7 @@ This class gives the methods needed to accomplish the following:
     - Create a pull request for new branch to source branch
     - Add labels to the pull request
 
+Since: 2021.04.02
 Author: Preocts <preocts@preocts.com>
 
 Usage:
@@ -68,10 +69,6 @@ class GitClient:
         self.__oauth = oauth
         self.client = http.client.HTTPSConnection("api.github.com")
 
-    def __str__(self) -> str:
-        """ REPL """
-        return f"Repo Owner: {self._owner}, Repo Name: {self._repo}"
-
     def __headers(self) -> dict:
         """ create headers with auth token """
         return {
@@ -85,19 +82,37 @@ class GitClient:
 
         self.client.request("POST", endpoint, json.dumps(payload), self.__headers())
 
-        # Decode response
-        # TODO error handling
-        result = json.loads(self.client.getresponse().read().decode("utf-8"))
-        return result
+        return self._handle_response()
 
     def _git_get(self, endpoint: str) -> dict:
         """ Private: Handles all GET to github. """
 
         self.client.request("GET", endpoint, None, self.__headers())
 
-        # Decode response
-        # TODO error handling
-        result = json.loads(self.client.getresponse().read().decode("utf-8"))
+        return self._handle_response()
+
+    def _handle_response(self) -> dict:
+        """ Captures errors in HTTPS request or returns valid response """
+        try:
+            response = self.client.getresponse()
+        except http.client.ResponseNotReady as err:
+            self.logger.error("No response? '%s'", err)
+            return {}
+
+        status = response.status
+        raw_response = response.read().decode("utf-8")
+
+        try:
+            result = json.loads(raw_response)
+        except json.JSONDecodeError as err:
+            self.logger.error("Error decoding JSON response: %s", err)
+            self.logger.debug("Raw response %s", raw_response)
+            return {}
+
+        if status not in range(200, 299):
+            # NOTE (preocts) Could do a retry recursive call here if desired
+            self.logger.error("HTTPS Response '%d', '%s'", status, result)
+
         return result
 
     def get_branch_sha(self, branch_name: str) -> Optional[str]:
@@ -240,7 +255,7 @@ class GitClient:
         # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
 
         self.logger.debug("Add labels")
-        endpoint = f"repo/{self._owner}/{self._repo}/issues/{number}/labels"
+        endpoint = f"/repos/{self._owner}/{self._repo}/issues/{number}/labels"
         payload = {
             "labels": labels,
         }

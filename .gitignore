@@ -5,3 +5,4 @@ preocts_*
 # Paths
 venv/
 __pycache__/
+*.egg-info/

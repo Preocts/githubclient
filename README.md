@@ -65,5 +65,14 @@ Usage:
         file_contents="# Hello World",
         pr_title="Pull request Title",
         pr_content="Pull request message",
+        labels=["Awesome Labels"],
     )
 ```
+
+### Notes
+
+If the branch already exists the logs will throw a `422` error. However, the class will attempt to recover the needed `sha` of the existing branch and carry on with the process.
+
+If a pull request already exists for the branch another `422` error will be throw in the logs. The class will attempt to look up the existing pull request number and continue with applying tags.
+
+The class is designed to fall-through with errors, returning a `False` boolean value if something beyond the two listed errors occurred during the attempt.

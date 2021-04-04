@@ -1,10 +1,43 @@
-# gitclient
+# Create branch, add file, and make pull request using GitHub API
 
-Quick and easy method to take a template file and add it to a repo on a new branch, including pull request for review.
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-No error catching so if the API call fails it falls straight through.
 
-Leverages http.client for HTTPSConnection.
+Automation class to accomplish the following in GitHub:
+1. Create a new branch
+1. Upload a given text file
+1. Commit the file to the branch
+1. Create a pull request
+
+## [Read the write-up here](docs/write-up.md)
+
+---
+
+### Requires
+- Python 3.8
+
+### Installation
+
+*NOTE: All instructions are using bash as the shell. It is recommended that you use a virtual environment such as `venv` to maintain libraries.*
+
+**Using pip to install from GitHub**
+```bash
+# Specific tag version
+$ pip install git://github.com/preocts/gitclient.git@v0.1.0
+
+# Most recent commit to main
+$ pip install git://github.com/preocts/gitclient.git
+```
+
+**Cloning repo and installing with a local editable**
+```bash
+$ git clone https://github.com/Preocts/gitclient.git
+
+$ make install
+
+# For development linters and pre-commit
+$ make install-dev
+```
 
 ---
 
@@ -12,7 +45,7 @@ Leverages http.client for HTTPSConnection.
 
 ```python
 Usage:
-    from gitclient import GitClient
+    from githubclient.gitclient import GitClient
 
     ...
     # Code to load/create template file as string, utf-8
@@ -34,9 +67,3 @@ Usage:
         pr_content="Pull request message",
     )
 ```
-
----
-
-API documentation references in each method.
-
-Spring-boarded by this gist: [https://gist.github.com/auwsome/123ae1f493dfd9b08434](https://gist.github.com/auwsome/123ae1f493dfd9b08434)

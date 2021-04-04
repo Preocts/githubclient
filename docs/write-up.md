@@ -1,8 +1,8 @@
-# Create branch, add file, and make pull request using Github API
+# Create branch, add file, and make pull request using GitHub API
 
 In the endless search for inches of improvement, automation often rises to the challenge. One such improvement I was looking for was to reduce the steps I took on a daily process within git an GitHub. This process involved a simple situation; throughout the week I would need to create a mark-down document, add it into a central repository, and make a pull request. I had already created a template of the document which had a few metadata fields that, programmatically, were filled in automatically. Automating the git routine was the challenge to be overcome here.
 
-To start, let us break the challenge down into the pieces that we need to accomplish and then look at each step in detail. While my code was done in Python and is linked at the end of this writeup, the steps below will focus more on the API of GitHub. This means if you know how to send an HTTPS request in the language of your choice, you can use this writeup.
+To start, let us break the challenge down into the pieces that we need to accomplish and then look at each step in detail. While my code was done in Python and is linked at the end of this write-up, the steps below will focus more on the API of GitHub. This means if you know how to send an HTTPS request in the language of your choice, you can use this write-up.
 
 ### Steps to accomplish the goal (duplicating the manual actions):
 

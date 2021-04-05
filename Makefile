@@ -1,4 +1,4 @@
-.PHONY: init install lock install-dev clean-pyc clean-build clean update
+.PHONY: init install lock install-dev clean-pyc clean-install clean update
 
 init:
 	pip install --upgrade pip setuptools wheel
@@ -26,9 +26,10 @@ clean-pyc: ## Remove python artifacts.
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f  {} +
 	find . -name '__pycache__' -exec rm -rf {} +
+	find . -name '.mypy_cache' -exec rm -rf {} +
 
-clean-build: ## Remove build artifacts.
+clean-install: ## Remove build artifacts.
+	find . -name '*.egg-info' -exec rm -rf {} +
 	pip uninstall gitclient-preocts
-	rm -rf ./src/*.egg-info
 
-clean: clean-pyc clean-build
+clean: clean-pyc clean-install

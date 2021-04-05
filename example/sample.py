@@ -3,7 +3,7 @@
 import os
 import logging
 
-from githubclient.gitclient import GitClient  # type: ignore
+from githubclient.gitclient import GitClient
 
 
 def main() -> None:

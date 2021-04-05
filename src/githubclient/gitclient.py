@@ -47,7 +47,7 @@ from typing import Optional
 class GitClient:
     """ Create a new branch, update a file, and submit a pull request against repo """
 
-    logger = logging.getLogger(__name__)
+    logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(
         self, name: str, email: str, owner: str, repo: str, oauth: str
@@ -67,7 +67,9 @@ class GitClient:
         self._owner = owner
         self._repo = repo
         self.__oauth = oauth
-        self.client = http.client.HTTPSConnection("api.github.com")
+        self.client: http.client.HTTPSConnection = http.client.HTTPSConnection(
+            "api.github.com"
+        )
 
     def __headers(self) -> dict:
         """ create headers with auth token """

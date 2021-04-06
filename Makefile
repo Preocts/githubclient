@@ -30,6 +30,5 @@ clean-pyc: ## Remove python artifacts.
 
 clean-install: ## Remove build artifacts.
 	find . -name '*.egg-info' -exec rm -rf {} +
-	pip uninstall gitclient-preocts
 
 clean: clean-pyc clean-install

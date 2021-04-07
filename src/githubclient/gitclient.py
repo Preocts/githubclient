@@ -40,6 +40,8 @@ import json
 import logging
 import http.client
 from string import printable
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -71,7 +73,7 @@ class GitClient:
             "api.github.com"
         )
 
-    def __headers(self) -> dict:
+    def __headers(self) -> Dict[str, str]:
         """ create headers with auth token """
         return {
             "Accept": "application.vnd.github.v3+json",
@@ -79,21 +81,21 @@ class GitClient:
             "Authorization": f"token {self.__oauth}",
         }
 
-    def _git_post(self, endpoint: str, payload: dict) -> dict:
+    def _git_post(self, endpoint: str, payload: Dict[str, Any]) -> Dict[Any, Any]:
         """ Private: Handles all posts to git. """
 
         self.client.request("POST", endpoint, json.dumps(payload), self.__headers())
 
         return self._handle_response()
 
-    def _git_get(self, endpoint: str) -> dict:
+    def _git_get(self, endpoint: str) -> Dict[Any, Any]:
         """ Private: Handles all GET to github. """
 
         self.client.request("GET", endpoint, None, self.__headers())
 
         return self._handle_response()
 
-    def _handle_response(self) -> dict:
+    def _handle_response(self) -> Dict[Any, Any]:
         """ Captures errors in HTTPS request or returns valid response """
         try:
             response = self.client.getresponse()
@@ -203,7 +205,7 @@ class GitClient:
 
         return self._git_post(endpoint, payload).get("sha", "")
 
-    def update_reference(self, branch_name: str, commit_sha: str) -> dict:
+    def update_reference(self, branch_name: str, commit_sha: str) -> Dict[Any, Any]:
         """ Create or update the reference of a branch """
         # https://docs.github.com/en/rest/reference/git#update-a-reference
 
@@ -310,7 +312,7 @@ class GitClient:
         new_branch: str,
         file_name: str,
         file_contents: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> bool:
         """
         Creates a new branch on defined repo, uploads template, makes PR

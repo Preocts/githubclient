@@ -30,6 +30,7 @@ Usage:
         new_branch="my_cool_branch,
         file_name="cool_template_file.md",
         file_contents="# Hello World",
+        directory="cool/files/",
         pr_title="Pull request Title",
         pr_content="Pull request message",
         labels=["Awesome", ":rooDuck:"]
@@ -324,16 +325,20 @@ class GitClient:
             file_contents: String of file contents
 
         Optional Keyword Args:
+            directory [str]: Optional directory nesting "target/directory/"
             pr_title [str]: Title of the pull request
             pr_content [str]: Conent of pull request message
             labels [List[str]]: String of labels to apply to pull request
         """
+        # pylint: disable=R0914
         pr_title = kwargs.get("pr_title", "New automated request")
         pr_body = kwargs.get("pr_content", "Automated PR")
+        directory = kwargs.get("directory", "")
         labels: List[str] = kwargs.get("labels", [])
 
         clean_branch_name = self._clean_string(new_branch, True, is_branch=True)
         clean_file_name = self._clean_string(file_name, True, is_file=True)
+        file_path = f"{directory}{clean_file_name}"
 
         new_branch_sha = self.create_branch(base_branch, clean_branch_name)
 
@@ -342,7 +347,7 @@ class GitClient:
             return False
 
         tree_sha = self.create_blob_tree(
-            new_branch_sha, clean_file_name, self.create_blob(file_contents)
+            new_branch_sha, file_path, self.create_blob(file_contents)
         )
 
         commit_sha = self.create_commit(new_branch_sha, tree_sha)

@@ -63,6 +63,7 @@ Usage:
         new_branch="my_cool_branch,
         file_name="cool_template_file.md",
         file_contents="# Hello World",
+        directory="cool/files/",
         pr_title="Pull request Title",
         pr_content="Pull request message",
         labels=["Awesome Labels"],

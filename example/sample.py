@@ -31,6 +31,7 @@ def main() -> None:
         new_branch="this_is_a_new_branch",
         file_name="new_file.md",
         file_contents="# Happy pandas\n\nThis can be any utf-8 text desired",
+        directory="new/directory/",
         pr_title="This is a sample PR",
         pr_content="All handled through automation.",
         labels=["New"],

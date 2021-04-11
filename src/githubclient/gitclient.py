@@ -1,276 +1,130 @@
 # -*- coding: utf-8 -*-
-""" Abstract layer for git API communication
+""" Create branch, add file, and make pull request using GitHub API
 
-This class gives the methods needed to accomplish the following:
-    - Create a new branch in target repo from source branch
-    - Upload a template file to the branch
-    - Commit the file to the new branch
-    - Create a pull request for new branch to source branch
-    - Add labels to the pull request
-
-Since: 2021.04.02
+Since: 2021.04.09
 Author: Preocts <preocts@preocts.com>
-
-Usage:
-    from gitclient import GitClient
-
-    ...
-    # Code to load/create template file as string, utf-8
-    ...
-
-    client = GitClient(
-        name="YOUR GITHUB NAME",
-        email="ASSOCIATED EMAIL",
-        owner="REPO-OWNER",  # (github.com/[OWNER]/[REPONAME])
-        repo="REPO-NAME",
-        oauth="[OAuth Secret Token]",
-    )
-    client.send_template(
-        base_branch="main",
-        new_branch="my_cool_branch,
-        file_name="cool_template_file.md",
-        file_contents="# Hello World",
-        directory="cool/files/",
-        pr_title="Pull request Title",
-        pr_content="Pull request message",
-        labels=["Awesome", ":rooDuck:"]
-    )
+GitHub: https://github.com/Preocts/githubclient
 """
 import re
-import json
 import logging
-import http.client
 from string import printable
-from typing import Any
-from typing import Dict
 from typing import List
+from typing import Tuple
 from typing import Optional
+from typing import NamedTuple
+
+from githubclient.gitapi import GitAPI
+
+
+class FileObj(NamedTuple):
+    """ Defines values for creating a blob, path is optional """
+
+    file_contents: str
+    file_name: str
+    file_path: str = ""
 
 
 class GitClient:
-    """ Create a new branch, update a file, and submit a pull request against repo """
+    """ Methods for creating branch, adding files, committing, and pull requests """
 
-    logger: logging.Logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
 
-    def __init__(
-        self, name: str, email: str, owner: str, repo: str, oauth: str
-    ) -> None:
+    def __init__(self, owner: str, repo: str, oauth: str) -> None:
         """
-        Provide username and personal token with correct permissions
+        Initialize to specific repo with personal auth token
 
         Args:
-            name: Team member name signing the commit
-            email: Team member email signing the commit
-            owner: Owner of the repo (github.com/[OWNER])
-            repo: Name of repo (github.com/[OWNER]/[REPO])
-            oauth: Person oauth token with permissions to commit
+            owner: Owner of repo, 'github.com/[OWNER]/[REPONAME]'
+            repo: Name of repo, 'github.com/[OWNER]/[REPONAME]'
+            oauth: Perosonal Auth token with minimum "public_repo" permissions
         """
-        self._name = name
-        self._email = email
-        self._owner = owner
-        self._repo = repo
-        self.__oauth = oauth
-        self.client: http.client.HTTPSConnection = http.client.HTTPSConnection(
-            "api.github.com"
+        self.api = GitAPI(owner, repo, oauth)
+        self.branch_name: Optional[str] = None
+        self.branch_sha: Optional[str] = None
+        self.tree_sha: Optional[str] = None
+        self.issue_number: Optional[int] = None
+
+    def create_branch(self, base_branch: str, new_branch: str) -> bool:
+        """ Creates a new branch from the base branch """
+        self.logger.debug("Create Branch: %s, %s", base_branch, new_branch)
+
+        self.branch_name = new_branch
+
+        self.branch_sha = self.api.create_branch(base_branch, new_branch)
+
+        return bool(self.branch_sha)
+
+    def add_files(self, file_objs: List[FileObj]) -> bool:
+        """ Creates a file and adds it to the stage """
+        self.logger.debug("Add files, total to process: %d", len(file_objs))
+        if not self.branch_sha:
+            raise Exception("No branch SHA found. Run create_branch() first.")
+
+        blobs: List[Tuple[str, str]] = []
+
+        for obj in file_objs:
+            blob_sha = self.api.create_blob(obj.file_contents)
+            if not blob_sha:
+                self.logger.error("Failed to create blob for %s", obj.file_name)
+            else:
+                blobs.append((blob_sha, GitClient.__path(obj)))
+
+        self.tree_sha = self.api.create_blob_tree(self.branch_sha, blobs)
+
+        return bool(self.tree_sha)
+
+    def create_commit(self, author_name: str, author_email: str) -> bool:
+        """ Commits any changes to created branch, updates branch reference """
+        self.logger.debug("Commit: %s -> %s", self.branch_sha, self.tree_sha)
+        if not self.branch_sha or not self.branch_name:
+            raise Exception("Missing branch info. Run create_branch() first.")
+        if not self.tree_sha:
+            raise Exception("No tree SHA found. Run add_files() first.")
+
+        commit_sha = self.api.create_commit(
+            author_name, author_email, self.branch_sha, self.tree_sha
         )
 
-    def __headers(self) -> Dict[str, str]:
-        """ create headers with auth token """
-        return {
-            "Accept": "application.vnd.github.v3+json",
-            "User-Agent": self._name,
-            "Authorization": f"token {self.__oauth}",
-        }
+        if not commit_sha:
+            return False
 
-    def _git_post(self, endpoint: str, payload: Dict[str, Any]) -> Dict[Any, Any]:
-        """ Private: Handles all posts to git. """
+        ref_sha = self.api.update_reference(self.branch_name, commit_sha)
 
-        self.client.request("POST", endpoint, json.dumps(payload), self.__headers())
+        return bool(ref_sha)
 
-        return self._handle_response()
+    def create_pull(self, base_branch: str, title: str, message: str) -> bool:
+        """ Create a pull request of new_branch into base_branch """
+        self.logger.debug("Create Pull %s <- %s", base_branch, self.branch_name)
+        if not self.branch_name:
+            raise Exception("Missing branch name. Run create_branch() first.")
 
-    def _git_get(self, endpoint: str) -> Dict[Any, Any]:
-        """ Private: Handles all GET to github. """
+        self.issue_number = self.api.create_pull_request(
+            base_branch, self.branch_name, title, message
+        )
 
-        self.client.request("GET", endpoint, None, self.__headers())
+        return bool(self.issue_number)
 
-        return self._handle_response()
+    def apply_labels(self, labels: List[str]) -> None:
+        """ Applies list of labels to pull request, will create if needed """
+        if not self.issue_number:
+            raise Exception("No issue number availabe. Run create_pull() first.")
 
-    def _handle_response(self) -> Dict[Any, Any]:
-        """ Captures errors in HTTPS request or returns valid response """
-        try:
-            response = self.client.getresponse()
-        except http.client.ResponseNotReady as err:
-            self.logger.error("No response? '%s'", err)
-            return {}
+        self.api.add_lables(self.issue_number, labels)
 
-        status = response.status
-        raw_response = response.read().decode("utf-8")
+    @staticmethod
+    def __path(obj: FileObj) -> str:
+        """ Assembles path, ensures leading and trailing are clean """
+        if obj.file_path and not obj.file_path.endswith("/"):
+            path = obj.file_path + "/"
+        else:
+            path = obj.file_path
 
-        try:
-            result = json.loads(raw_response)
-        except json.JSONDecodeError as err:
-            self.logger.error("Error decoding JSON response: %s", err)
-            self.logger.debug("Raw response %s", raw_response)
-            return {}
+        file_path = f"{path}{obj.file_name}".rstrip("/")
+        return file_path.strip()
 
-        if status not in range(200, 299):
-            # NOTE (preocts) Could do a retry recursive call here if desired
-            self.logger.error("HTTPS Response '%d', '%s'", status, result)
-
-        return result
-
-    def get_branch_sha(self, branch_name: str) -> Optional[str]:
-        """ Get the SHA of the base branch """
-        # https://docs.github.com/en/rest/reference/repos#get-a-branch
-
-        self.logger.debug("Requesting branch SHA")
-        endpoint = f"/repos/{self._owner}/{self._repo}/branches/{branch_name}"
-
-        result = self._git_get(endpoint)
-
-        sha = result.get("commit", {}).get("sha")
-        if sha is None:
-            self.logger.error("Get SHA failed: %s", result)
-
-        return sha
-
-    def create_branch(self, base_branch: str, new_branch: str) -> Optional[str]:
-        """ Creates branch from base branch, return SHA of new branch """
-        # https://docs.github.com/en/rest/reference/git#create-a-reference
-
-        self.logger.debug("Creating Branch")
-        endpoint = f"/repos/{self._owner}/{self._repo}/git/refs"
-        payload = {
-            "ref": f"refs/heads/{new_branch}",
-            "sha": self.get_branch_sha(base_branch),
-        }
-        result = self._git_post(endpoint, payload)
-        if "message" in result and result["message"] == "Reference already exists":
-            # Branch exists, recover existing SHA
-            return self.get_branch_sha(new_branch)
-
-        return result.get("object", {}).get("sha", "")
-
-    def create_blob(self, file_contents: str) -> str:
-        """ Create blob of the file_contents, returns SHA reference """
-        # https://docs.github.com/en/rest/reference/git#create-a-blob
-
-        self.logger.debug("Creating Blob")
-        endpoint = f"/repos/{self._owner}/{self._repo}/git/blobs"
-        payload = {
-            "owner": self._owner,
-            "repo": self._repo,
-            "content": file_contents,
-            "encoding": "utf-8",
-        }
-
-        return self._git_post(endpoint, payload).get("sha", "")
-
-    def create_blob_tree(self, branch_sha: str, file_name: str, blob_sha: str) -> str:
-        """ Create a tree link to blob, returns tree sha for commit """
-        # https://docs.github.com/en/rest/reference/git#create-a-tree
-
-        self.logger.debug("Creating Tree")
-        endpoint = f"/repos/{self._owner}/{self._repo}/git/trees"
-        payload = {
-            "base_tree": branch_sha,
-            "owner": self._owner,
-            "repo": self._repo,
-            "tree": [
-                {
-                    "path": file_name,
-                    "mode": "100644",
-                    "type": "blob",
-                    "sha": blob_sha,
-                }
-            ],
-        }
-        return self._git_post(endpoint, payload).get("sha", "")
-
-    def create_commit(self, branch_sha: str, tree_sha: str) -> str:
-        """ Creates commit to branch """
-        # https://docs.github.com/en/rest/reference/git#create-a-commit
-
-        self.logger.debug("Create commit")
-        endpoint = f"/repos/{self._owner}/{self._repo}/git/commits"
-        payload = {
-            "message": "Auto commit by AIM Orc WatchTower",
-            "author": {
-                "name": self._name,
-                "email": self._email,
-            },
-            "parents": [branch_sha],
-            "tree": tree_sha,
-        }
-
-        return self._git_post(endpoint, payload).get("sha", "")
-
-    def update_reference(self, branch_name: str, commit_sha: str) -> Dict[Any, Any]:
-        """ Create or update the reference of a branch """
-        # https://docs.github.com/en/rest/reference/git#update-a-reference
-
-        self.logger.debug("Update branch ref")
-        endpoint = f"/repos/{self._owner}/{self._repo}/git/refs/heads/{branch_name}"
-        payload = {
-            "ref": f"refs/heads/{branch_name}",
-            "sha": commit_sha,
-        }
-
-        return self._git_post(endpoint, payload)
-
-    def create_pull_request(
-        self, base_branch: str, head_branch: str, pr_title: str, pr_body: str
-    ) -> Optional[int]:
-        """ Create PR from head_branch -> base_branch """
-        # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
-
-        self.logger.debug("Create pull request")
-        endpoint = f"/repos/{self._owner}/{self._repo}/pulls"
-        payload = {
-            "owner": self._owner,
-            "repo": self._repo,
-            "title": pr_title,
-            "head": head_branch,
-            "base": base_branch,
-            "body": pr_body,
-            "maintainer_can_modify": True,
-        }
-
-        number = self._git_post(endpoint, payload).get("number")
-
-        return number if number else self.recover_pull_request(head_branch)
-
-    def recover_pull_request(self, head_branch: str) -> Optional[int]:
-        """ Attempts to find existing PR by branch name, fails if more/less than 1 """
-        # https://docs.github.com/en/rest/reference/issues#list-repository-issues
-        params = f"?head={head_branch}"
-        endpoint = f"/repos/{self._owner}/{self._repo}/pulls{params}"
-
-        result = self._git_get(endpoint)
-
-        if not isinstance(result, list) or len(result) > 1:
-            self.logger.warning("Unable to find exact PR for '%s'", head_branch)
-            return None
-
-        return result[0].get("number") if result else None
-
-    def add_lables(self, number: int, labels: List[str]) -> None:
-        """ Add labels to a pull request """
-        # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
-
-        self.logger.debug("Add labels")
-        endpoint = f"/repos/{self._owner}/{self._repo}/issues/{number}/labels"
-        payload = {
-            "labels": labels,
-        }
-
-        if labels:
-            self._git_post(endpoint, payload)
-
-    def _clean_string(
-        self,
-        input_: str,
+    @staticmethod
+    def clean_string(
+        content: str,
         clean_spaces: bool = False,
         is_branch: bool = False,
         is_file: bool = False,
@@ -279,6 +133,7 @@ class GitClient:
         Strips all non-printable characters from input. Trims leading/trailing space
 
         Args:
+            content: String to clean
             clean_space: If true will replace spaces with underscores
             is_branch: If true will strip illegal branch characters
             is_file: If true will strip illegal filename characters
@@ -290,7 +145,7 @@ class GitClient:
         # Regex to find forbidden characters in filename
         file_rules = r'[\\/:"*?<>|]+'
 
-        for char in input_:
+        for char in content:
             if char in printable:
                 result += char
 
@@ -303,64 +158,4 @@ class GitClient:
         if is_file:
             result = re.sub(file_rules, "", result)
 
-        if input_ != result:
-            self.logger.debug("String altered: '%s' -> '%s'", input_, result)
         return result.strip(" ")
-
-    def send_template(
-        self,
-        base_branch: str,
-        new_branch: str,
-        file_name: str,
-        file_contents: str,
-        **kwargs: Any,
-    ) -> bool:
-        """
-        Creates a new branch on defined repo, uploads template, makes PR
-
-        Args:
-            base_branch: Name of branch that will be the source of new branch
-            new_branch: Name of new branch (will fail if exists)
-            file_name: Name of file being committed
-            file_contents: String of file contents
-
-        Optional Keyword Args:
-            directory [str]: Optional directory nesting "target/directory/"
-            pr_title [str]: Title of the pull request
-            pr_content [str]: Conent of pull request message
-            labels [List[str]]: String of labels to apply to pull request
-        """
-        # pylint: disable=R0914
-        pr_title = kwargs.get("pr_title", "New automated request")
-        pr_body = kwargs.get("pr_content", "Automated PR")
-        directory = kwargs.get("directory", "")
-        labels: List[str] = kwargs.get("labels", [])
-
-        clean_branch_name = self._clean_string(new_branch, True, is_branch=True)
-        clean_file_name = self._clean_string(file_name, True, is_file=True)
-        file_path = f"{directory}{clean_file_name}"
-
-        new_branch_sha = self.create_branch(base_branch, clean_branch_name)
-
-        if not new_branch_sha:
-            self.logger.critical("Failed to find branch SHA, unable to continue.")
-            return False
-
-        tree_sha = self.create_blob_tree(
-            new_branch_sha, file_path, self.create_blob(file_contents)
-        )
-
-        commit_sha = self.create_commit(new_branch_sha, tree_sha)
-
-        self.update_reference(clean_branch_name, commit_sha)
-
-        issue_number = self.create_pull_request(
-            base_branch, clean_branch_name, pr_title, pr_body
-        )
-
-        if not issue_number:
-            self.logger.critical("No issue number returned, unable to complete.")
-            return False
-
-        self.add_lables(issue_number, labels)
-        return True

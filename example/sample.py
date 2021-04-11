@@ -1,9 +1,34 @@
 # -*- coding: utf-8 -*-
-""" A sample use of the gitclient class """
+"""
+A sample use of the gitclient class
+
+This requires you to set four (4) globals with your GitHub information
+which are found below.
+
+You will also need a personal OAuth token from GitHub. If the target
+repo is public (recommended) the only permission your personal token
+requires is 'public_repo'
+
+Set an enviromental var named 'GITCLIENT_OAUTH' with your personal token.
+    bash:
+    $ export GITCLIENT_OAUTH="[YOUR TOKEN]"
+
+    command prompt/powershell:
+    $ SET GITCLIENT_OAUTH="[YOUR TOKEN]"
+"""
 import os
 import logging
 
+from githubclient.gitclient import FileObj
 from githubclient.gitclient import GitClient
+
+logger = logging.getLogger(__name__)
+
+# Set these to your information
+OWNER = "[REPO OWNER]"  # 'github.com/[OWNER]/[REPONAME]'
+REPO = "[REPO NAME]"
+NAME = "[YOUR GITHUB NAME]"
+EMAIL = "[YOUR GITHUB ACCOUNT EMAIL]"
 
 
 def main() -> None:
@@ -13,34 +38,43 @@ def main() -> None:
     token = os.getenv("GITCLIENT_OAUTH", "")
 
     if not token:
-        print("You need to set your personal access token, read the code Luke.")
+        logger.critical("Set a GITCLIENT_OAUTH, read the code Luke.")
         return
+
+    file01 = open("./example/sample_doc01.md", "r").read()
+    file02 = open("./example/sample_doc02.md", "r").read()
+
+    files_to_add = [
+        FileObj(file01, "my_sample.md"),
+        FileObj(file02, "path_sample.md", "new_path/"),
+    ]
 
     # Create the client instance, providing your authentication information
     client = GitClient(
-        name="[YOUR GITHUB NAME]",
-        email="[YOUR GITHUB EMAIL]",
-        owner="[TARGET REPO OWNER (probably your name)]",
-        repo="[TARGET REPO]",
+        owner=OWNER,
+        repo=REPO,
         oauth=token,
     )
 
-    # Run the full process
-    result = client.send_template(
-        base_branch="main",
-        new_branch="this_is_a_new_branch",
-        file_name="new_file.md",
-        file_contents="# Happy pandas\n\nThis can be any utf-8 text desired",
-        directory="new/directory/",
-        pr_title="This is a sample PR",
-        pr_content="All handled through automation.",
-        labels=["New"],
-    )
+    if not client.create_branch("main", "sample_branch"):
+        logger.critical("Failed to create branch!")
+        return
 
-    if result:
-        print("\n\nEverything ran as expected. Confirm in GitHub!")
-    else:
-        print("\n\nSomething went wrong. Check the logs for clues.")
+    if not client.add_files(files_to_add):
+        logger.critical("Failed to add files!")
+        return
+
+    if not client.create_commit(NAME, EMAIL):
+        logger.critical("Failed to make commit!")
+        return
+
+    if not client.create_pull("main", "Auto PR by Python", "# Happy Pandas"):
+        logger.critical("Failed to make pull request!")
+
+    client.apply_labels(["New", "Pandas", "Happy"])
+
+    print("\n\nIf you are reading this then everthing ran as expected.")
+    print("You should go confirm in GitHub!")
 
 
 if __name__ == "__main__":

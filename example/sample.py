@@ -2,6 +2,8 @@
 """
 A sample use of the gitclient class
 
+NOTE: Before running this code follow setup guide below
+
 This requires you to set four (4) globals with your GitHub information
 which are found below.
 
@@ -15,12 +17,15 @@ Set an enviromental var named 'GITCLIENT_OAUTH' with your personal token.
 
     command prompt/powershell:
     $ SET GITCLIENT_OAUTH="[YOUR TOKEN]"
+
+To run from root of project:
+    $ python3 -m example.sample
 """
 import os
 import logging
 
-from githubclient.gitclient import FileObj
-from githubclient.gitclient import GitClient
+from githubclient.gitclient import FileObj  # type: ignore
+from githubclient.gitclient import GitClient  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,6 @@ def main() -> None:
         FileObj(file02, "path_sample.md", "new_path/"),
     ]
 
-    # Create the client instance, providing your authentication information
     client = GitClient(
         owner=OWNER,
         repo=REPO,

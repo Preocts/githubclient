@@ -1,6 +1,7 @@
 pre-commit
-pytest
 black
-pylint
 mypy
 flake8
+pytest
+coverage
+tox

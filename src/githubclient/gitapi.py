@@ -12,15 +12,15 @@ Since: 2021.04.02
 Author: Preocts <preocts@preocts.com>
 GitHub: https://github.com/Preocts/githubclient
 """
+import http.client
 import json
 import logging
-import http.client
-from urllib.parse import quote
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Tuple
 from typing import Optional
+from typing import Tuple
+from urllib.parse import quote
 
 
 class GitAPI:

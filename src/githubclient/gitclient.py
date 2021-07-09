@@ -5,13 +5,13 @@ Since: 2021.04.09
 Author: Preocts <preocts@preocts.com>
 GitHub: https://github.com/Preocts/githubclient
 """
-import re
 import logging
+import re
 from string import printable
 from typing import List
-from typing import Tuple
-from typing import Optional
 from typing import NamedTuple
+from typing import Optional
+from typing import Tuple
 
 from githubclient.gitapi import GitAPI
 

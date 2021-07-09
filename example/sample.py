@@ -21,11 +21,11 @@ Set an enviromental var named 'GITCLIENT_OAUTH' with your personal token.
 To run from root of project:
     $ python3 -m example.sample
 """
-import os
 import logging
+import os
 
-from githubclient.gitclient import FileObj  # type: ignore
-from githubclient.gitclient import GitClient  # type: ignore
+from githubclient.gitclient import FileObj
+from githubclient.gitclient import GitClient
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ EMAIL = "[YOUR GITHUB ACCOUNT EMAIL]"
 
 
 def main() -> None:
-    """ Simple sample of the class """
+    """Simple sample of the class"""
     logging.basicConfig(level="DEBUG")
     # Load your github access token to an environment variable "GITCLIENT_OAUTH"
     token = os.getenv("GITCLIENT_OAUTH", "")

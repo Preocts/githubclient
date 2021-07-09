@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Create branch, add file, and make pull request using GitHub API
 
-Since: 2021.04.09
-Author: Preocts <preocts@preocts.com>
+Author: Preocts <Preocts#8196>
 GitHub: https://github.com/Preocts/githubclient
 """
 import logging
@@ -17,7 +16,7 @@ from githubclient.gitapi import GitAPI
 
 
 class FileObj(NamedTuple):
-    """ Defines values for creating a blob, path is optional """
+    """Defines values for creating a blob, path is optional"""
 
     file_contents: str
     file_name: str
@@ -25,7 +24,7 @@ class FileObj(NamedTuple):
 
 
 class GitClient:
-    """ Methods for creating branch, adding files, committing, and pull requests """
+    """Methods for creating branch, adding files, committing, and pull requests"""
 
     logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ class GitClient:
         self.issue_number: Optional[int] = None
 
     def create_branch(self, base_branch: str, new_branch: str) -> bool:
-        """ Creates a new branch from the base branch """
+        """Creates a new branch from the base branch"""
         self.logger.debug("Create Branch: %s, %s", base_branch, new_branch)
 
         self.branch_name = new_branch
@@ -55,7 +54,7 @@ class GitClient:
         return bool(self.branch_sha)
 
     def add_files(self, file_objs: List[FileObj]) -> bool:
-        """ Creates a file and adds it to the stage """
+        """Creates a file and adds it to the stage"""
         self.logger.debug("Add files, total to process: %d", len(file_objs))
         if not self.branch_sha:
             raise Exception("No branch SHA found. Run create_branch() first.")
@@ -74,7 +73,7 @@ class GitClient:
         return bool(self.tree_sha)
 
     def create_commit(self, author_name: str, author_email: str) -> bool:
-        """ Commits any changes to created branch, updates branch reference """
+        """Commits any changes to created branch, updates branch reference"""
         self.logger.debug("Commit: %s -> %s", self.branch_sha, self.tree_sha)
         if not self.branch_sha or not self.branch_name:
             raise Exception("Missing branch info. Run create_branch() first.")
@@ -93,7 +92,7 @@ class GitClient:
         return bool(ref_sha)
 
     def create_pull(self, base_branch: str, title: str, message: str) -> bool:
-        """ Create a pull request of new_branch into base_branch """
+        """Create a pull request of new_branch into base_branch"""
         self.logger.debug("Create Pull %s <- %s", base_branch, self.branch_name)
         if not self.branch_name:
             raise Exception("Missing branch name. Run create_branch() first.")
@@ -105,7 +104,7 @@ class GitClient:
         return bool(self.issue_number)
 
     def apply_labels(self, labels: List[str]) -> None:
-        """ Applies list of labels to pull request, will create if needed """
+        """Applies list of labels to pull request, will create if needed"""
         if not self.issue_number:
             raise Exception("No issue number availabe. Run create_pull() first.")
 
@@ -113,7 +112,7 @@ class GitClient:
 
     @staticmethod
     def __path(obj: FileObj) -> str:
-        """ Assembles path, ensures leading and trailing are clean """
+        """Assembles path, ensures leading and trailing are clean"""
         if obj.file_path and not obj.file_path.endswith("/"):
             path = obj.file_path + "/"
         else:

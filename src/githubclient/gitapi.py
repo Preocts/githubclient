@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Abstract layer for git API communication
 
 This class gives the methods needed to accomplish the following:
@@ -8,8 +7,7 @@ This class gives the methods needed to accomplish the following:
     - Create a pull request for new branch to source branch
     - Add labels to the pull request
 
-Since: 2021.04.02
-Author: Preocts <preocts@preocts.com>
+Author: Preocts <Preocts#8196>
 GitHub: https://github.com/Preocts/githubclient
 """
 import http.client
@@ -24,7 +22,7 @@ from urllib.parse import quote
 
 
 class GitAPI:
-    """ Create a new branch, update a file, and submit a pull request against repo """
+    """Create a new branch, update a file, and submit a pull request against repo"""
 
     logger: logging.Logger = logging.getLogger(__name__)
 
@@ -49,21 +47,21 @@ class GitAPI:
         )
 
     def _git_post(self, endpoint: str, payload: Dict[str, Any]) -> Dict[Any, Any]:
-        """ Private: Handles all posts to git. """
+        """Private: Handles all posts to git."""
 
         self.client.request("POST", endpoint, json.dumps(payload), self.headers)
 
         return self._handle_response()
 
     def _git_get(self, endpoint: str) -> Dict[Any, Any]:
-        """ Private: Handles all GET to github. """
+        """Private: Handles all GET to github."""
 
         self.client.request("GET", endpoint, None, self.headers)
 
         return self._handle_response()
 
     def _handle_response(self) -> Dict[Any, Any]:
-        """ Captures errors in HTTPS request or returns valid response """
+        """Captures errors in HTTPS request or returns valid response"""
         try:
             response = self.client.getresponse()
         except http.client.ResponseNotReady as err:
@@ -87,7 +85,7 @@ class GitAPI:
         return result
 
     def get_branch_sha(self, branch_name: str) -> str:
-        """ Get the SHA of the base branch """
+        """Get the SHA of the base branch"""
         # https://docs.github.com/en/rest/reference/repos#get-a-branch
 
         self.logger.debug("Requesting branch SHA")
@@ -102,7 +100,7 @@ class GitAPI:
         return sha
 
     def create_branch(self, base_branch: str, new_branch: str) -> str:
-        """ Creates branch from base branch, return SHA of new branch """
+        """Creates branch from base branch, return SHA of new branch"""
         # https://docs.github.com/en/rest/reference/git#create-a-reference
 
         self.logger.debug("Creating Branch")
@@ -119,7 +117,7 @@ class GitAPI:
         return result.get("object", {}).get("sha", "")
 
     def create_blob(self, file_contents: str) -> str:
-        """ Create blob of the file_contents, returns SHA reference """
+        """Create blob of the file_contents, returns SHA reference"""
         # https://docs.github.com/en/rest/reference/git#create-a-blob
 
         self.logger.debug("Creating Blob")
@@ -168,7 +166,7 @@ class GitAPI:
     def create_commit(
         self, author_name: str, author_email: str, branch_sha: str, tree_sha: str
     ) -> str:
-        """ Creates commit to branch """
+        """Creates commit to branch"""
         # https://docs.github.com/en/rest/reference/git#create-a-commit
 
         self.logger.debug("Create commit")
@@ -186,7 +184,7 @@ class GitAPI:
         return self._git_post(endpoint, payload).get("sha", "")
 
     def update_reference(self, branch_name: str, commit_sha: str) -> str:
-        """ Create or update the reference of a branch """
+        """Create or update the reference of a branch"""
         # https://docs.github.com/en/rest/reference/git#update-a-reference
 
         self.logger.debug("Update branch ref")
@@ -201,7 +199,7 @@ class GitAPI:
     def create_pull_request(
         self, base_branch: str, head_branch: str, pr_title: str, pr_body: str
     ) -> Optional[int]:
-        """ Create PR from head_branch -> base_branch """
+        """Create PR from head_branch -> base_branch"""
         # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
 
         self.logger.debug("Create pull request")
@@ -221,7 +219,7 @@ class GitAPI:
         return number if number else self.recover_pull_request(head_branch)
 
     def recover_pull_request(self, head_branch: str) -> Optional[int]:
-        """ Attempts to find existing PR by branch name, fails if more/less than 1 """
+        """Attempts to find existing PR by branch name, fails if more/less than 1"""
         # https://docs.github.com/en/rest/reference/issues#list-repository-issues
         params = quote(f"head={head_branch}")
         endpoint = f"/repos/{self.owner}/{self.repo}/pulls?{params}"
@@ -235,7 +233,7 @@ class GitAPI:
         return result[0].get("number") if result else None
 
     def add_lables(self, number: int, labels: List[str]) -> None:
-        """ Add labels to a pull request """
+        """Add labels to a pull request"""
         # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
 
         self.logger.debug("Add labels")

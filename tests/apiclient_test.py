@@ -5,15 +5,27 @@ from unittest.mock import patch
 import pytest
 from githubclient.apiclient import APIClient
 
+VALID_MOCK_ENV = {
+    "GITHUB_AUTH_TOKEN": "MOCK",
+    "GITHUB_USER_NAME": "MOCK",
+}
+
 
 def test_env_loaded() -> None:
     """A token exists"""
-    with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "MOCK"}):
+    with patch.dict(os.environ, VALID_MOCK_ENV):
         _ = APIClient()
 
 
-def test_missing_env() -> None:
+def test_missing_env_token() -> None:
     """Stop if token is missing"""
-    with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": ""}):
+    with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "", "GITHUB_USER_NAME": "MOCK"}):
+        with pytest.raises(ValueError):
+            _ = APIClient()
+
+
+def test_missing_env_username() -> None:
+    """Stop if token is missing"""
+    with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "MOCK", "GITHUB_USER_NAME": ""}):
         with pytest.raises(ValueError):
             _ = APIClient()

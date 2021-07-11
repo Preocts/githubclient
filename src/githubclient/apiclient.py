@@ -1,5 +1,5 @@
 """
-[_] Post
+[~] Post
 [~] Get
 [x] Josnify
 [_] Object creation
@@ -39,11 +39,21 @@ class APIClient:
             retries=urllib3.Retry(total=3, backoff_factor=2),
         )
 
-    def git_get(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def git_get(self, endpoint: str) -> Dict[str, Any]:
         """Handles all GET requests to GitHub"""
 
         result = self.apiclient.request(
             method="GET",
+            url=self.BASE_URL + endpoint,
+        )
+
+        return self._jsonify(result.data)
+
+    def git_post(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handles all POST requests to GitHub, payload is translated to body"""
+
+        result = self.apiclient.request(
+            method="POST",
             url=self.BASE_URL + endpoint,
             body=json.dumps(payload),
         )

@@ -5,6 +5,7 @@
 [_] Object creation
 """
 import json
+import logging
 import os
 from typing import Any
 from typing import Dict
@@ -17,6 +18,8 @@ class APIClient:
 
     BASE_URL = "https://api.github.com"
 
+    logger = logging.getLogger("APIClient")
+
     def __init__(self, num_pools: int = 10) -> None:
         """Personal Auth Token needs to be in 'GITHUB_AUTH_TOKEN` env variable"""
         auth_token = os.getenv("GITHUB_AUTH_TOKEN", "")
@@ -28,10 +31,10 @@ class APIClient:
         }
 
         if not auth_token:
-            raise ValueError("Missing GITHUB_AUTH_TOKEN environment variable")
+            self.logger.warning("Missing GITHUB_AUTH_TOKEN environment variable")
 
         if not user_name:
-            raise ValueError("Missing GITHUB_USER_NAME environment variable")
+            self.logger.warning("Missing GITHUB_USER_NAME environment variable")
 
         self.apiclient = urllib3.PoolManager(
             num_pools=num_pools,

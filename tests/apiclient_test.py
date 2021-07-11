@@ -1,14 +1,27 @@
 """Unit tests for apiclient.py"""
 import os
+from typing import Any
 from unittest.mock import patch
 
-import pytest
+import vcr
 from githubclient.apiclient import APIClient
+from secretbox.loadenv import LoadEnv
 
+_ = LoadEnv(auto_load=True)
+
+TEST_USER = "Preocts"
 VALID_MOCK_ENV = {
     "GITHUB_AUTH_TOKEN": "MOCK",
     "GITHUB_USER_NAME": "MOCK",
 }
+
+gitvcr = vcr.VCR(
+    record_mode="once",
+    filter_headers=["Authorization"],
+    match_on=["uri", "method"],
+    serializer="yaml",
+    cassette_library_dir="tests/fixtures",
+)
 
 
 def test_env_loaded() -> None:
@@ -17,18 +30,20 @@ def test_env_loaded() -> None:
         _ = APIClient()
 
 
-def test_missing_env_token() -> None:
+def test_missing_env_token(caplog: Any) -> None:
     """Stop if token is missing"""
     with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "", "GITHUB_USER_NAME": "MOCK"}):
-        with pytest.raises(ValueError):
-            _ = APIClient()
+        _ = APIClient()
+
+        assert "Missing GITHUB_AUTH_TOKEN" in caplog.text
 
 
-def test_missing_env_username() -> None:
+def test_missing_env_username(caplog: Any) -> None:
     """Stop if token is missing"""
     with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "MOCK", "GITHUB_USER_NAME": ""}):
-        with pytest.raises(ValueError):
-            _ = APIClient()
+        _ = APIClient()
+
+        assert "Missing GITHUB_USER_NAME" in caplog.text
 
 
 def test_jsonify() -> None:
@@ -38,3 +53,32 @@ def test_jsonify() -> None:
 
     assert isinstance(APIClient._jsonify(valid), dict)
     assert APIClient._jsonify(invalid) == {"error": invalid}
+
+
+def test_get() -> None:
+    """Recorded GET test"""
+    client = APIClient()
+
+    with gitvcr.use_cassette("test_get.yaml"):
+        result = client.git_get("/users/" + TEST_USER)
+
+    assert "error" not in result
+
+
+def test_post() -> None:
+    """Recorded POST test"""
+    client = APIClient()
+    payload = {
+        "description": "Unit test",
+        "files": {
+            "unittest.md": {
+                "content": "# Egg",
+            },
+        },
+        "public": True,
+    }
+
+    with gitvcr.use_cassette("test_post.yaml"):
+        result = client.git_post("/gists", payload)
+
+    assert result["description"] == payload["description"]

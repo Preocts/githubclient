@@ -80,5 +80,8 @@ def test_post() -> None:
 
     with gitvcr.use_cassette("test_post.yaml"):
         result = client.git_post("/gists", payload)
+    import json
+
+    open("post.json", "w").write(json.dumps(result, indent=4))
 
     assert result["description"] == payload["description"]

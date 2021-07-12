@@ -5,6 +5,16 @@
 
 # Create branch, add file, and make pull request using GitHub API
 
+**Current Activity**
+- Metrics capture to debug console
+- Rewrite API layer (we are here)
+- Refactor client class to use API layer
+- Add CLI interface
+  - send to Repo as Pull Request
+  - send to Gist (create/update)
+
+---
+
 Automation class to accomplish the following in GitHub:
 1. Create a new branch
 1. Upload a given text file

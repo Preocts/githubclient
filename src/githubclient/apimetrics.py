@@ -21,6 +21,8 @@ logger = logging.getLogger("APIMetrics")
 def capmetrics(func: Callable[..., Any]) -> Any:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
+        now = time.time()
+
         tic = time.perf_counter_ns()
 
         result = func(*args, **kwargs)
@@ -28,7 +30,8 @@ def capmetrics(func: Callable[..., Any]) -> Any:
         elapse = (time.perf_counter_ns() - tic) / 1_000_000
 
         logger.debug(
-            "func: %s, in: %s bytes, out: %s bytes, elspse: %s ms",
+            "epoch: %s, func: %s, in: %s bytes, out: %s bytes, elspse: %s ms",
+            now,
             func.__name__,
             sizeof(args) + sizeof(kwargs),
             sizeof(result),

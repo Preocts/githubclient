@@ -14,13 +14,12 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
-
 logger = logging.getLogger("APIMetrics")
 
 
-def capmetrics(func: Callable[..., Any]) -> Any:
+def capmetrics(func: Callable[..., Dict[str, Any]]) -> Callable[..., Dict[str, Any]]:
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         now = time.time()
 
         tic = time.perf_counter_ns()

@@ -43,12 +43,13 @@ class APIClient:
         )
 
     @capmetrics
-    def git_get(self, endpoint: str) -> Dict[str, Any]:
+    def git_get(self, endpoint: str, payload: Dict[str, Any] = {}) -> Dict[str, Any]:
         """Handles all GET requests to GitHub"""
 
         result = self.apiclient.request(
             method="GET",
             url=self.BASE_URL + endpoint,
+            body=json.dumps(payload),
         )
 
         return self._jsonify(result.data)

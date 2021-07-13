@@ -6,12 +6,12 @@
 # Create branch, add file, and make pull request using GitHub API
 
 **Current Activity**
-- Metrics capture to debug console
-- Rewrite API layer (we are here)
-- Refactor client class to use API layer
-- Add CLI interface
-  - send to Repo as Pull Request
-  - send to Gist (create/update)
+- [x] Metrics capture to debug console
+- [~] Rewrite API layer (we are here)
+- [_] Refactor client class to use API layer
+- [_] Add CLI interface
+  - [_] Send to repo as Pull Request
+  - [_] Send to gist (create/update)
 
 ---
 

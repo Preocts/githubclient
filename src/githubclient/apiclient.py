@@ -1,7 +1,7 @@
 """
 Abstract base API actions against GitHub (CRUD operations)
 
-Author: Preocts (Preocts#8196)
+Author: Preocts <Preocts#8196>
 """
 import json
 import logging

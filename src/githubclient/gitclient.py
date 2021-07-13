@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-""" Create branch, add file, and make pull request using GitHub API
+"""
+Create branch, add file, and make pull request using GitHub API
 
 Author: Preocts <Preocts#8196>
-GitHub: https://github.com/Preocts/githubclient
 """
 import logging
 import re

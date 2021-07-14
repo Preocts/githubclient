@@ -1,5 +1,7 @@
 """
-Actions for repos
+GitHub Actions for Repos
+
+Author: Preocts (Preocts#8196)
 """
 from githubclient.apiclient import APIClient
 
@@ -9,7 +11,7 @@ class RepoActions(APIClient):
 
     def __init__(self, repo_owner: str, repo_name: str, num_pools: int = 10) -> None:
         """Create client class. num_pools = https pool manager"""
-        super().__init__(num_pools=10)
+        super().__init__(num_pools=num_pools)
         self.repo = repo_name
         self.owner = repo_owner
 

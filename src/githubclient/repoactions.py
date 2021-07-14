@@ -15,8 +15,8 @@ class RepoActions(APIClient):
         self.repo = repo_name
         self.owner = repo_owner
 
-    def get_branch_sha(self, branch_name: str) -> str:
-        """Get the SHA of the branch"""
+    def get_branch(self, branch_name: str) -> str:
+        """Get a branch"""
         # https://docs.github.com/en/rest/reference/repos#get-a-branch
 
         self.logger.debug("Requesting SHA of branch: %s", branch_name)
@@ -36,7 +36,7 @@ class RepoActions(APIClient):
         endpoint = f"/repos/{self.owner}/{self.repo}/git/refs"
         payload = {
             "ref": f"refs/heads/{new_branch}",
-            "sha": self.get_branch_sha(base_branch),
+            "sha": self.get_branch(base_branch),
         }
         result = self.git_post(endpoint, payload)
 

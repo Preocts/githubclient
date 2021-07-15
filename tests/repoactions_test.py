@@ -62,7 +62,7 @@ def test_get_branch_fail(repo: RepoActions) -> None:
     with gitvcr.use_cassette(GET_BRANCH_FAIL):
         result = repo.get_branch(TEST_BRANCH * 3)
 
-    assert not result
+    assert not result.sha
 
 
 def test_create_branch_success(repo: RepoActions) -> None:

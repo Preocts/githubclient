@@ -3,7 +3,20 @@ GitHub Actions for Repos
 
 Author: Preocts (Preocts#8196)
 """
+from typing import Any
+from typing import Dict
+from typing import NamedTuple
+
 from githubclient.apiclient import APIClient
+
+
+class RepoReturn(NamedTuple):
+    """Return values from Repo actions"""
+
+    full_return: Dict[str, Any] = {}
+    sha: str = ""
+    url: str = ""
+    html_url: str = ""
 
 
 class RepoActions(APIClient):
@@ -15,7 +28,7 @@ class RepoActions(APIClient):
         self.repo = repo_name
         self.owner = repo_owner
 
-    def get_branch(self, branch_name: str) -> str:
+    def get_branch(self, branch_name: str) -> RepoReturn:
         """Get a branch"""
         # https://docs.github.com/en/rest/reference/repos#get-a-branch
 
@@ -24,9 +37,12 @@ class RepoActions(APIClient):
 
         result = self.git_get(endpoint)
 
-        sha = result.get("commit", {}).get("sha", "")
-
-        return sha
+        return RepoReturn(
+            full_return=result,
+            sha=result.get("commit", {}).get("sha", ""),
+            url=result.get("url", ""),
+            html_url=result.get("html_url", ""),
+        )
 
     def create_branch(self, base_branch: str, new_branch: str) -> str:
         """Creates branch from base branch"""
@@ -36,7 +52,7 @@ class RepoActions(APIClient):
         endpoint = f"/repos/{self.owner}/{self.repo}/git/refs"
         payload = {
             "ref": f"refs/heads/{new_branch}",
-            "sha": self.get_branch(base_branch),
+            "sha": self.get_branch(base_branch).sha,
         }
         result = self.git_post(endpoint, payload)
 

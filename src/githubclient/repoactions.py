@@ -29,7 +29,7 @@ class RepoActions(APIClient):
         return sha
 
     def create_branch(self, base_branch: str, new_branch: str) -> str:
-        """Creates branch from base branch, return SHA of new branch"""
+        """Creates branch from base branch"""
         # https://docs.github.com/en/rest/reference/git#create-a-reference
 
         self.logger.debug("Creating Branch")

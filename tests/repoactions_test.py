@@ -22,6 +22,8 @@ GET_BRANCH_GOOD = "get_branch_success.yaml"
 GET_BRANCH_FAIL = "get_branch_fail.yaml"
 CREATE_BRANCH_GOOD = "create_branch_success.yaml"
 CREATE_BRANCH_FAIL = "create_branch_fail.yaml"
+CREATE_BLOBS_TREE_GOOD = "create_blobs_tree_success.yaml"
+
 
 gitvcr = vcr.VCR(
     record_mode="once",
@@ -80,8 +82,14 @@ def test_create_branch_fail(repo: RepoActions) -> None:
     with gitvcr.use_cassette(CREATE_BRANCH_FAIL):
         result = repo.create_branch(TEST_BRANCH, TEST_BRANCH)
 
-        assert not result
+        assert not result.sha
 
         result = repo.create_branch(TEST_BRANCH, f"{TEST_BRANCH}*{TEST_BRANCH}")
 
-        assert not result
+        assert not result.sha
+
+
+# def test_create_blobs_and_tree(repo: RepoActions) -> None:
+#     """Fail to create a branch because existing and invalid"""
+#     mock_blob01 = "There once was a tree on a hill"
+#     mock_blob02 = "The end"

@@ -7,21 +7,18 @@
 
 **Current Activity**
 - [x] Metrics capture to debug console
-- [~] Rewrite API layer (we are here)
-- [_] Refactor client class to use API layer
+- [x] Rewrite API layer (we are here)
+- [x] Refactor client class to use API layer
+- [~] Create pip installable layer
 - [_] Add CLI interface
   - [_] Send to repo as Pull Request
   - [_] Send to gist (create/update)
 
 ---
 
-Automation class to accomplish the following in GitHub:
-1. Create a new branch
-1. Upload a given text file
-1. Commit the file to the branch
-1. Create a pull request
+## What is this project?
 
-## [Read the write-up here](docs/write-up.md)
+[Read the write-up here](docs/write-up.md)
 
 ---
 
@@ -46,16 +43,7 @@ The process is designed to fall-through with errors, returning a `False` boolean
 
 ### Installation
 
-*NOTE: All instructions are using bash as the shell. It is recommended that you use a virtual environment such as `venv` to maintain libraries.*
-
-**Using pip to install from GitHub**
-```bash
-# Specific tag version (replace ? with desired tag)
-$ pip install git://github.com/preocts/gitclient.git@v?.?.?
-
-# Most recent commit to main (unstable)
-$ pip install git://github.com/preocts/gitclient.git
-```
+*pending*
 
 ---
 
@@ -65,8 +53,8 @@ It is **highly** recommended to use a `venv` for installation. Leveraging a `ven
 
 Clone this repo and enter root directory of repo:
 ```bash
-$ git clone https://github.com/Preocts/[MODULE_NAME]
-$ cd [MODULE_NAME]
+$ git clone https://github.com/Preocts/githubclient
+$ cd githubclient
 ```
 
 Create and activate `venv`:
@@ -80,7 +68,6 @@ Your command prompt should now have a `(venv)` prefix on it.
 Install editable library and development requirements:
 ```bash
 (venv) $ pip install -r requirements-dev.txt
-(venv) $ pip install --editable .
 ```
 
 Install pre-commit hooks to local repo:

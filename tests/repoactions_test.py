@@ -28,6 +28,7 @@ CREATE_TREE_GOOD = "create_tree_success.yaml"
 CREATE_COMMIT_GOOD = "create_commit_success.yaml"
 UPDATE_REF_GOOD = "update_ref_success.yaml"
 CREATE_PR_GOOD = "create_pr_success.yaml"
+ADD_LABELS_GOOD = "add_labels_success.yaml"
 
 # TEST REQUIRED SHA VALUES
 # NOTE: Would love to have a better way here.
@@ -39,6 +40,7 @@ NEW_BLOBS_SHA = [
 ]
 NEW_TREE_SHA = "b52e7bad122209b1c11d27c5eaf84e99e513ef65"
 NEW_COMMIT_SHA = "4e51a63f07f40f59823d35b0b9fe019ddfd6357b"
+NEW_PR_NUMBER = "8"
 
 
 gitvcr = vcr.VCR(
@@ -160,3 +162,13 @@ def test_create_pr_success(repo: RepoActions) -> None:
         result = repo.create_pull_request(TEST_NEW_BRANCH, TEST_BRANCH)
 
     assert result.sha
+    assert isinstance(result.sha, str)
+
+
+def test_add_labels_success(repo: RepoActions) -> None:
+    """Add some labels"""
+    labels = ["MockTest01", "MockTest02"]
+    with gitvcr.use_cassette(ADD_LABELS_GOOD):
+        result = repo.add_lables(NEW_PR_NUMBER, labels)
+
+    assert len(result.full_return) == len(labels)

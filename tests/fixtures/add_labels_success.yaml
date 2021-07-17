@@ -1,0 +1,70 @@
+interactions:
+- request:
+    body: '{"labels": ["MockTest01", "MockTest02"]}'
+    headers:
+      Accept:
+      - application.vnd.github.v3+json
+      User-Agent:
+      - Preocts
+    method: POST
+    uri: https://api.github.com/repos/Preocts/gitclient_test/issues/8/labels
+  response:
+    body:
+      string: '[{"id":3176238155,"node_id":"MDU6TGFiZWwzMTc2MjM4MTU1","url":"https://api.github.com/repos/Preocts/gitclient_test/labels/MockTest01","name":"MockTest01","color":"ededed","default":false,"description":null},{"id":3176238156,"node_id":"MDU6TGFiZWwzMTc2MjM4MTU2","url":"https://api.github.com/repos/Preocts/gitclient_test/labels/MockTest02","name":"MockTest02","color":"ededed","default":false,"description":null}]'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining,
+        X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes,
+        X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation,
+        Sunset
+      Cache-Control:
+      - private, max-age=60, s-maxage=60
+      Content-Length:
+      - '411'
+      Content-Security-Policy:
+      - default-src 'none'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Sat, 17 Jul 2021 05:28:03 GMT
+      ETag:
+      - '"ad97dd58633110d5de987ea484b1c2a788a57db3c73a157d17f152033b12a87b"'
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - GitHub.com
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubdomains; preload
+      Vary:
+      - Accept, Authorization, Cookie, X-GitHub-OTP
+      - Accept-Encoding, Accept, X-Requested-With
+      X-Accepted-OAuth-Scopes:
+      - ''
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-GitHub-Media-Type:
+      - github.v3; format=json
+      X-GitHub-Request-Id:
+      - D780:67A3:1AE9ACF:310DD0C:60F26A63
+      X-OAuth-Scopes:
+      - gist, public_repo
+      X-RateLimit-Limit:
+      - '5000'
+      X-RateLimit-Remaining:
+      - '4994'
+      X-RateLimit-Reset:
+      - '1626500291'
+      X-RateLimit-Resource:
+      - core
+      X-RateLimit-Used:
+      - '6'
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1

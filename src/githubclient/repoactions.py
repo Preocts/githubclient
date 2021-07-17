@@ -203,7 +203,23 @@ class RepoActions(APIClient):
 
         return self.RepoReturn(
             full_return=result,
-            sha=result.get("number", ""),
+            sha=str(result.get("number", "")),
             url=result.get("url", ""),
             html_url=result.get("html_url", ""),
+        )
+
+    def add_lables(self, number: str, labels: List[str]) -> RepoReturn:
+        """Add label(s) to an existing pull request"""
+        # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
+
+        self.logger.debug("Add labels")
+        endpoint = f"/repos/{self.owner}/{self.repo}/issues/{number}/labels"
+        payload = {
+            "labels": labels,
+        }
+
+        result = self.git_post(endpoint, payload)
+
+        return self.RepoReturn(
+            full_return=result,
         )

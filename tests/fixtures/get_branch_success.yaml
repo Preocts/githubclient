@@ -33,7 +33,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 14 Jul 2021 04:07:58 GMT
+      - Sat, 17 Jul 2021 03:33:18 GMT
       ETag:
       - '"1f0e23d75cb9bdc950fb47b280d9bc9e8c969dfe1be127b02be568d3b44e6fdb"'
       Referrer-Policy:
@@ -54,19 +54,19 @@ interactions:
       X-GitHub-Media-Type:
       - github.v3; format=json
       X-GitHub-Request-Id:
-      - F95C:5E42:3099D8:5FB962:60EE631E
+      - D726:50C1:A91BBC:1B1047C:60F24F7E
       X-OAuth-Scopes:
       - gist, public_repo
       X-RateLimit-Limit:
       - '5000'
       X-RateLimit-Remaining:
-      - '4991'
+      - '4995'
       X-RateLimit-Reset:
-      - '1626237898'
+      - '1626496359'
       X-RateLimit-Resource:
       - core
       X-RateLimit-Used:
-      - '9'
+      - '5'
       X-XSS-Protection:
       - '0'
     status:

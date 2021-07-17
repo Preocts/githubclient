@@ -117,4 +117,5 @@ class RepoActions(APIClient):
         return self.RepoReturn(
             full_return=result,
             sha=result.get("sha", ""),
+            url=result.get("url", ""),
         )

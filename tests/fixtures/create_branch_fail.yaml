@@ -33,7 +33,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 15 Jul 2021 02:33:55 GMT
+      - Sat, 17 Jul 2021 03:33:19 GMT
       ETag:
       - '"1f0e23d75cb9bdc950fb47b280d9bc9e8c969dfe1be127b02be568d3b44e6fdb"'
       Referrer-Policy:
@@ -54,19 +54,19 @@ interactions:
       X-GitHub-Media-Type:
       - github.v3; format=json
       X-GitHub-Request-Id:
-      - F91C:4DBB:6923DC:F009C6:60EF9E93
+      - D72C:8736:1BFB6D5:3824C87:60F24F7E
       X-OAuth-Scopes:
       - gist, public_repo
       X-RateLimit-Limit:
       - '5000'
       X-RateLimit-Remaining:
-      - '4986'
+      - '4991'
       X-RateLimit-Reset:
-      - '1626318726'
+      - '1626496359'
       X-RateLimit-Resource:
       - core
       X-RateLimit-Used:
-      - '14'
+      - '9'
       X-XSS-Protection:
       - '0'
     status:
@@ -99,7 +99,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 15 Jul 2021 02:33:55 GMT
+      - Sat, 17 Jul 2021 03:33:19 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -117,19 +117,19 @@ interactions:
       X-GitHub-Media-Type:
       - github.v3; format=json
       X-GitHub-Request-Id:
-      - F91C:4DBB:6923DF:F009D3:60EF9E93
+      - D72C:8736:1BFB6E1:3824C9B:60F24F7F
       X-OAuth-Scopes:
       - gist, public_repo
       X-RateLimit-Limit:
       - '5000'
       X-RateLimit-Remaining:
-      - '4985'
+      - '4990'
       X-RateLimit-Reset:
-      - '1626318726'
+      - '1626496359'
       X-RateLimit-Resource:
       - core
       X-RateLimit-Used:
-      - '15'
+      - '10'
       X-XSS-Protection:
       - '0'
     status:
@@ -169,7 +169,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 15 Jul 2021 02:33:55 GMT
+      - Sat, 17 Jul 2021 03:33:19 GMT
       ETag:
       - '"1f0e23d75cb9bdc950fb47b280d9bc9e8c969dfe1be127b02be568d3b44e6fdb"'
       Referrer-Policy:
@@ -190,19 +190,19 @@ interactions:
       X-GitHub-Media-Type:
       - github.v3; format=json
       X-GitHub-Request-Id:
-      - F91C:4DBB:6923E6:F009E7:60EF9E93
+      - D72C:8736:1BFB6EF:3824CB8:60F24F7F
       X-OAuth-Scopes:
       - gist, public_repo
       X-RateLimit-Limit:
       - '5000'
       X-RateLimit-Remaining:
-      - '4984'
+      - '4989'
       X-RateLimit-Reset:
-      - '1626318726'
+      - '1626496359'
       X-RateLimit-Resource:
       - core
       X-RateLimit-Used:
-      - '16'
+      - '11'
       X-XSS-Protection:
       - '0'
     status:
@@ -235,7 +235,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 15 Jul 2021 02:33:55 GMT
+      - Sat, 17 Jul 2021 03:33:19 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -253,19 +253,19 @@ interactions:
       X-GitHub-Media-Type:
       - github.v3; format=json
       X-GitHub-Request-Id:
-      - F91C:4DBB:6923EE:F009F1:60EF9E93
+      - D72C:8736:1BFB6FA:3824CCA:60F24F7F
       X-OAuth-Scopes:
       - gist, public_repo
       X-RateLimit-Limit:
       - '5000'
       X-RateLimit-Remaining:
-      - '4983'
+      - '4988'
       X-RateLimit-Reset:
-      - '1626318726'
+      - '1626496359'
       X-RateLimit-Resource:
       - core
       X-RateLimit-Used:
-      - '17'
+      - '12'
       X-XSS-Protection:
       - '0'
     status:

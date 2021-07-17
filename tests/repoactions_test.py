@@ -18,11 +18,24 @@ MOCK_ENV = {
     "GITHUB_USER_NAME": "MOCK",
 }
 
+# VCR FILE NAMES
 GET_BRANCH_GOOD = "get_branch_success.yaml"
 GET_BRANCH_FAIL = "get_branch_fail.yaml"
 CREATE_BRANCH_GOOD = "create_branch_success.yaml"
 CREATE_BRANCH_FAIL = "create_branch_fail.yaml"
-CREATE_BLOBS_TREE_GOOD = "create_blobs_tree_success.yaml"
+CREATE_BLOBS_GOOD = "create_blobs_success.yaml"
+CREATE_TREE_GOOD = "create_tree_success.yaml"
+
+# TEST REQUIRED SHA VALUES
+# NOTE: Would love to have a better way here.
+# These are pulled from each test, used in the next
+NEW_BRANCH_SHA = "08746b8758f3f2047ab3720a5b1b457dfb7f11bf"
+NEW_BLOBS_SHA = [
+    ("e5b064423801f1397792727eb6d25dfb0552cea7", "file01.txt"),
+    ("0257d4d2d3d5f1acf80e7d1832274b76865bbab9", "file02.txt"),
+]
+NEW_TREE_SHA = ""
+NEW_COMMIT_SHA = ""
 
 
 gitvcr = vcr.VCR(
@@ -55,7 +68,7 @@ def test_get_branch_success(repo: RepoActions) -> None:
     with gitvcr.use_cassette(GET_BRANCH_GOOD):
         result = repo.get_branch(TEST_BRANCH)
 
-    assert result
+    assert result.sha
 
 
 def test_get_branch_fail(repo: RepoActions) -> None:
@@ -73,7 +86,7 @@ def test_create_branch_success(repo: RepoActions) -> None:
     with gitvcr.use_cassette(CREATE_BRANCH_GOOD):
         result = repo.create_branch(TEST_BRANCH, TEST_NEW_BRANCH)
 
-    assert result
+    assert result.sha
 
 
 def test_create_branch_fail(repo: RepoActions) -> None:
@@ -89,7 +102,23 @@ def test_create_branch_fail(repo: RepoActions) -> None:
         assert not result.sha
 
 
-# def test_create_blobs_and_tree(repo: RepoActions) -> None:
-#     """Fail to create a branch because existing and invalid"""
-#     mock_blob01 = "There once was a tree on a hill"
-#     mock_blob02 = "The end"
+def test_create_blob(repo: RepoActions) -> None:
+    """Create two blobs"""
+    mock_blob01 = "There once was a tree on a hill"
+    mock_blob02 = "The end"
+
+    with gitvcr.use_cassette(CREATE_BLOBS_GOOD):
+        blob01 = repo.create_blob(mock_blob01)
+        blob02 = repo.create_blob(mock_blob02)
+
+    assert blob01.sha
+    assert blob02.sha
+
+
+def test_create_tree(repo: RepoActions) -> None:
+    """Create a tree"""
+
+    with gitvcr.use_cassette(CREATE_TREE_GOOD):
+        result = repo.create_blob_tree(NEW_BRANCH_SHA, NEW_BLOBS_SHA)
+
+    assert result.sha

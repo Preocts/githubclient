@@ -87,7 +87,13 @@ class RepoActions(APIClient):
     def create_blob_tree(
         self, branch_sha: str, blob_shas: List[Tuple[str, str]]
     ) -> RepoReturn:
-        """Link blob(s) to a tree at the branch provided"""
+        """
+        Link blob(s) to a tree at the branch provided
+
+        Args:
+            branch_sha: SHA of branch to create tree
+            blob_shas: List of ([blob SHA], [filename])
+        """
         # https://docs.github.com/en/rest/reference/git#create-a-tree
 
         self.logger.debug("Creating Tree")
@@ -118,4 +124,86 @@ class RepoActions(APIClient):
             full_return=result,
             sha=result.get("sha", ""),
             url=result.get("url", ""),
+        )
+
+    def create_commit(
+        self,
+        author_name: str,
+        author_email: str,
+        branch_sha: str,
+        tree_sha: str,
+        message: str = "Auto commit",
+    ) -> RepoReturn:
+        """Creates commit to branch"""
+        # https://docs.github.com/en/rest/reference/git#create-a-commit
+
+        self.logger.debug("Create commit of %s to %s", tree_sha, branch_sha)
+        endpoint = f"/repos/{self.owner}/{self.repo}/git/commits"
+        payload = {
+            "message": message,
+            "author": {
+                "name": author_name,
+                "email": author_email,
+            },
+            "parents": [branch_sha],
+            "tree": tree_sha,
+        }
+
+        result = self.git_post(endpoint, payload)
+
+        return self.RepoReturn(
+            full_return=result,
+            sha=result.get("sha", ""),
+            url=result.get("url", ""),
+            html_url=result.get("html_url", ""),
+        )
+
+    def update_reference(self, branch_name: str, commit_sha: str) -> RepoReturn:
+        """Create or update the reference of a branch"""
+        # https://docs.github.com/en/rest/reference/git#update-a-reference
+
+        self.logger.debug("Update branch %s to ref %s", branch_name, commit_sha)
+        endpoint = f"/repos/{self.owner}/{self.repo}/git/refs/heads/{branch_name}"
+        payload = {
+            "ref": f"refs/heads/{branch_name}",
+            "sha": commit_sha,
+        }
+
+        result = self.git_post(endpoint, payload)
+
+        return self.RepoReturn(
+            full_return=result,
+            sha=result.get("object", {}).get("sha", ""),
+            url=result.get("object", {}).get("url", ""),
+        )
+
+    def create_pull_request(
+        self,
+        new_branch: str,
+        base_branch: str,
+        pr_title: str = "Auto PR",
+        pr_body: str = "PR Auto Generated",
+    ) -> RepoReturn:
+        """Create PR of new_branch merging into base_branch"""
+        # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
+
+        self.logger.debug("Create pull request of %s to %s", new_branch, base_branch)
+        endpoint = f"/repos/{self.owner}/{self.repo}/pulls"
+        payload = {
+            "owner": self.owner,
+            "repo": self.repo,
+            "title": pr_title,
+            "head": new_branch,
+            "base": base_branch,
+            "body": pr_body,
+            "maintainer_can_modify": True,
+        }
+
+        result = self.git_post(endpoint, payload)
+
+        return self.RepoReturn(
+            full_return=result,
+            sha=result.get("number", ""),
+            url=result.get("url", ""),
+            html_url=result.get("html_url", ""),
         )

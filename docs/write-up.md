@@ -308,8 +308,3 @@ The entire process is fairly straight-forward to execute, once you've dug throug
 1. [GitHub API Documentation - Update a reference](https://docs.github.com/en/rest/reference/git#update-a-reference)
 1. [GitHub API Documentation - Create a pull request](https://docs.github.com/en/rest/reference/pulls#create-a-pull-request)
 1. [GitHub API Documentation - Add labels to an issue](https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue)
-
-
-## Sample code
-
-My `gitclient` which uses all of the above steps in a Python class: [https://github.com/Preocts/gitclient/blob/main/src/githubclient/gitclient.py](https://github.com/Preocts/gitclient/blob/main/src/githubclient/gitclient.py)

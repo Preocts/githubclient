@@ -7,7 +7,7 @@ import pytest
 from githubclient import prfile
 
 
-NOW = datetime.datetime.now().strftime("%h%s")
+NOW = datetime.datetime.now().strftime("%H%M%S")
 TEST_TOML = "tests/fixtures/.repoconfig_test.toml"
 MOCK_FILES = ["filename01.txt", "filename02.txt"]
 

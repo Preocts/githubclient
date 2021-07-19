@@ -24,7 +24,7 @@ from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
 
-import toml  # type: ignore
+import toml
 
 # TODO: Why does pre-commit mypy not find types-toml?
 

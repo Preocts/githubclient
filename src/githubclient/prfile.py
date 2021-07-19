@@ -13,11 +13,14 @@ Commands:
 Author: Preocts <Preocts#8196>
 """
 import argparse
+import pathlib
 import sys
 from typing import Optional
 from typing import Sequence
 
 REPO_URL = "https://github.com/Preocts/githubclient"
+CONFIG_FILE = ".default_config.toml"
+CWD = pathlib.Path.cwd()
 
 
 def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -54,7 +57,13 @@ def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
     print("Meow")
     print(args)
+    print(pathlib.Path.cwd())
     return 0
+
+
+def file_exists(filename: str) -> bool:
+    """Checks for the existance of file in current working directory"""
+    return pathlib.Path.exists(CWD / filename)
 
 
 if __name__ == "__main__":

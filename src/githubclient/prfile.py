@@ -4,23 +4,59 @@ CLI Controls for creates a PR with a file
 All commands can be given 'global'
 
 Commands:
-    --repo-name
-    --owner-name
-    --name
-    --email
-    --auth-token
-    --
+    --reponame
+    --ownername
+    --username
+    --useremail
+    --usertoken
+
 Author: Preocts <Preocts#8196>
 """
+from __future__ import annotations
+
 import argparse
 import pathlib
 import sys
+from typing import Any
+from typing import Dict
+from typing import MutableMapping
+from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
+
+import toml  # type: ignore
+
+# TODO: Why does pre-commit mypy not find types-toml?
 
 REPO_URL = "https://github.com/Preocts/githubclient"
 CONFIG_FILE = ".default_config.toml"
 CWD = pathlib.Path.cwd()
+
+
+class RepoConfig(NamedTuple):
+    """Dataclass to hold config for repo actions"""
+
+    reponame: str = ""
+    ownername: str = ""
+    username: str = ""
+    useremail: str = ""
+    usertoken: str = ""
+
+    def as_dict(self) -> Dict[str, Any]:
+        """Returns config as nested dict under key: repo"""
+        return {"repo": self._asdict()}
+
+    @classmethod
+    def from_toml(cls, toml_in: MutableMapping[str, Any]) -> RepoConfig:
+        """Generate class from toml load"""
+        repo = toml_in.get("repo", {})
+        return cls(
+            reponame=repo.get("reponame", ""),
+            ownername=repo.get("ownername", ""),
+            username=repo.get("username", ""),
+            useremail=repo.get("useremail", ""),
+            usertoken=repo.get("usertoken", ""),
+        )
 
 
 def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -55,15 +91,30 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
-    print("Meow")
-    print(args)
-    print(pathlib.Path.cwd())
+    if not file_exists(CONFIG_FILE):
+        create_empty_config(CONFIG_FILE)
+
+    # TODO: config
+    _ = load_config(CONFIG_FILE)
+
     return 0
 
 
 def file_exists(filename: str) -> bool:
     """Checks for the existance of file in current working directory"""
     return pathlib.Path.exists(CWD / filename)
+
+
+def create_empty_config(filename: str) -> None:
+    """Creates an empty toml for the working directory"""
+    with open(pathlib.Path(CWD / filename), "w") as toml_out:
+        toml.dump(RepoConfig().as_dict(), toml_out)
+
+
+def load_config(filename: str) -> RepoConfig:
+    """Load config toml from working directory"""
+    with open(pathlib.Path(CWD / filename), "r") as toml_in:
+        return RepoConfig.from_toml(toml.load(toml_in))
 
 
 if __name__ == "__main__":

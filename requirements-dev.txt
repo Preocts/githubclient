@@ -91,6 +91,8 @@ tomli==1.0.4
     # via black
 tox==3.24.0
     # via -r requirements-dev.in
+types-toml==0.1.3
+    # via -r requirements-dev.in
 typing-extensions==3.10.0.0
     # via mypy
 vcrpy==4.1.1

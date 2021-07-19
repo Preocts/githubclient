@@ -1,0 +1,6 @@
+[repo]
+reponame = "mockname"
+ownername = "mockowner"
+username = "mockuser"
+useremail = "mockemail"
+usertoken = "mocktoken"

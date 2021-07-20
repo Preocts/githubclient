@@ -26,8 +26,6 @@ from typing import Sequence
 
 import toml
 
-# TODO: Why does pre-commit mypy not find types-toml?
-
 REPO_URL = "https://github.com/Preocts/githubclient"
 CONFIG_FILE = ".default_config.toml"
 CWD = pathlib.Path.cwd()
@@ -42,7 +40,7 @@ class RepoConfig(NamedTuple):
     useremail: str = ""
     usertoken: str = ""
 
-    def as_dict(self) -> Dict[str, Any]:
+    def to_toml(self) -> Dict[str, Any]:
         """Returns config as nested dict under key: repo"""
         return {"repo": self._asdict()}
 
@@ -71,50 +69,62 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         nargs="+",
         help="One, or more, files to be added to the pull request (utf-8 encoding)",
     )
-
-    parser.add_argument(
-        "--repo-name",
-        help="Set name of target repo (https://github.com/[owner name]/[repo name])",
-    )
-    parser.add_argument(
-        "--owner-name",
-        help="Set repo's owner name (https://github.com/[owner name]/[repo name])",
-    )
-    parser.add_argument("--email", help="Set your GitHub email for pull requests")
-    parser.add_argument("--name", help="Set your GitHub user name")
-    parser.add_argument(
-        "--auth-token",
-        help="Set the developer auth-token (must have 'public_repo' access)",
-    )
+    # parser.add_argument(
+    #     "--repo-name",
+    #     help="Set name of target repo (https://github.com/[owner name]/[repo name])",
+    # )
+    # parser.add_argument(
+    #     "--owner-name",
+    #     help="Set repo's owner name (https://github.com/[owner name]/[repo name])",
+    # )
+    # parser.add_argument(
+    #     "--email",
+    #     help="Set your GitHub email for pull requests",
+    # )
+    # parser.add_argument(
+    #     "--name",
+    #     help="Set your GitHub user name",
+    # )
+    # parser.add_argument(
+    #     "--auth-token",
+    #     help="Set the developer auth-token (must have 'public_repo' access)",
+    # )
     return parser.parse_args() if args is None else parser.parse_args(args)
 
 
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
-    if not file_exists(CONFIG_FILE):
-        create_empty_config(CONFIG_FILE)
+    config = fill_config(load_config(CONFIG_FILE))
 
-    # TODO: config
-    _ = load_config(CONFIG_FILE)
+    save_config(CONFIG_FILE, config)
 
     return 0
 
 
-def file_exists(filename: str) -> bool:
-    """Checks for the existance of file in current working directory"""
-    return pathlib.Path.exists(CWD / filename)
-
-
-def create_empty_config(filename: str) -> None:
-    """Creates an empty toml for the working directory"""
+def save_config(filename: str, config: RepoConfig) -> None:
+    """Save toml config in the working directory"""
     with open(pathlib.Path(CWD / filename), "w") as toml_out:
-        toml.dump(RepoConfig().as_dict(), toml_out)
+        toml.dump(config.to_toml(), toml_out)
 
 
 def load_config(filename: str) -> RepoConfig:
     """Load config toml from working directory"""
-    with open(pathlib.Path(CWD / filename), "r") as toml_in:
-        return RepoConfig.from_toml(toml.load(toml_in))
+    try:
+        with open(pathlib.Path(CWD / filename), "r") as toml_in:
+            config = RepoConfig.from_toml(toml.load(toml_in))
+    except FileNotFoundError:
+        config = RepoConfig()
+
+    return config
+
+
+def fill_config(config: RepoConfig) -> RepoConfig:
+    """Prompts user for missing config values"""
+    filled_config: Dict[str, str] = {}
+    for key, value in config._asdict().items():
+        filled_config[key] = value if value else input(f"Enter {value}: ")
+
+    return RepoConfig(**filled_config)
 
 
 if __name__ == "__main__":

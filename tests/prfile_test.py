@@ -4,7 +4,6 @@ import os
 import pathlib
 from unittest.mock import patch
 
-import pytest
 from githubclient import prfile
 
 
@@ -30,12 +29,6 @@ def test_main() -> None:
         os.remove(filename)
 
 
-def test_parser_no_args() -> None:
-    """Raise SystemExit with no args test"""
-    with pytest.raises(SystemExit):
-        _ = prfile.cli_parser([])
-
-
 def test_parser_file_names() -> None:
     """Get list of filenames"""
 
@@ -58,13 +51,20 @@ def test_create_empty_config() -> None:
 
 def test_load_toml() -> None:
     """Load test fixture toml"""
-    result = prfile.load_config(TEST_TOML)
+    empty_args = prfile.cli_parser([])
+    user_args = prfile.cli_parser(["--username", "Preocts"])
+
+    result = prfile.load_config(TEST_TOML, empty_args)
 
     assert result.ownername
     assert result.reponame
     assert result.useremail
     assert result.username
     assert result.usertoken
+
+    result = prfile.load_config(TEST_TOML, user_args)
+
+    assert result.username == "Preocts"
 
 
 def test_fill_config() -> None:

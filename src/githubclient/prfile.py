@@ -66,36 +66,42 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "filenames",
-        nargs="+",
+        type=str,
+        nargs="*",
         help="One, or more, files to be added to the pull request (utf-8 encoding)",
     )
-    # parser.add_argument(
-    #     "--repo-name",
-    #     help="Set name of target repo (https://github.com/[owner name]/[repo name])",
-    # )
-    # parser.add_argument(
-    #     "--owner-name",
-    #     help="Set repo's owner name (https://github.com/[owner name]/[repo name])",
-    # )
-    # parser.add_argument(
-    #     "--email",
-    #     help="Set your GitHub email for pull requests",
-    # )
-    # parser.add_argument(
-    #     "--name",
-    #     help="Set your GitHub user name",
-    # )
-    # parser.add_argument(
-    #     "--auth-token",
-    #     help="Set the developer auth-token (must have 'public_repo' access)",
-    # )
+    parser.add_argument(
+        "--reponame",
+        type=str,
+        help="Set name of target repo (https://github.com/[owner name]/[repo name])",
+    )
+    parser.add_argument(
+        "--ownername",
+        type=str,
+        help="Set repo's owner name (https://github.com/[owner name]/[repo name])",
+    )
+    parser.add_argument(
+        "--username",
+        type=str,
+        help="Set your GitHub user name",
+    )
+    parser.add_argument(
+        "--useremail",
+        type=str,
+        help="Set your GitHub email for pull requests",
+    )
+    parser.add_argument(
+        "--usertoken",
+        type=str,
+        help="Set the developer auth-token (must have 'public_repo' access)",
+    )
     return parser.parse_args() if args is None else parser.parse_args(args)
 
 
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
-    config = fill_config(load_config(CONFIG_FILE))
-
+    config = fill_config(load_config(CONFIG_FILE, args))
+    print(config)
     save_config(CONFIG_FILE, config)
 
     return 0
@@ -107,15 +113,21 @@ def save_config(filename: str, config: RepoConfig) -> None:
         toml.dump(config.to_toml(), toml_out)
 
 
-def load_config(filename: str) -> RepoConfig:
-    """Load config toml from working directory"""
+def load_config(filename: str, args: argparse.Namespace) -> RepoConfig:
+    """Load config toml, merge with and CLI optionals"""
     try:
         with open(pathlib.Path(CWD / filename), "r") as toml_in:
             config = RepoConfig.from_toml(toml.load(toml_in))
     except FileNotFoundError:
         config = RepoConfig()
 
-    return config
+    return RepoConfig(
+        reponame=config.reponame if args.reponame is None else args.reponame,
+        ownername=config.ownername if args.ownername is None else args.ownername,
+        username=config.username if args.username is None else args.username,
+        useremail=config.useremail if args.useremail is None else args.useremail,
+        usertoken=config.usertoken if args.usertoken is None else args.usertoken,
+    )
 
 
 def fill_config(config: RepoConfig) -> RepoConfig:

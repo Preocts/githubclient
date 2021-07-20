@@ -3,6 +3,7 @@ temp_*
 .vscode/
 configs/
 code_lines.txt
+.default_config.toml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

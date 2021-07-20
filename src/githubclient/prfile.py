@@ -122,7 +122,7 @@ def fill_config(config: RepoConfig) -> RepoConfig:
     """Prompts user for missing config values"""
     filled_config: Dict[str, str] = {}
     for key, value in config._asdict().items():
-        filled_config[key] = value if value else input(f"Enter {value}: ")
+        filled_config[key] = value if value else input(f"Enter {key}: ")
 
     return RepoConfig(**filled_config)
 

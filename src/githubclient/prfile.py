@@ -19,6 +19,7 @@ import pathlib
 import sys
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import MutableMapping
 from typing import NamedTuple
 from typing import Optional
@@ -101,7 +102,8 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
     config = fill_config(load_config(CONFIG_FILE, args))
-    print(config)
+    if not all_files_exist(args.filenames):
+        raise FileNotFoundError(f"Unable to find files: {args.filenames}")
     save_config(CONFIG_FILE, config)
 
     return 0
@@ -137,6 +139,11 @@ def fill_config(config: RepoConfig) -> RepoConfig:
         filled_config[key] = value if value else input(f"Enter {key}: ")
 
     return RepoConfig(**filled_config)
+
+
+def all_files_exist(files: List[str]) -> bool:
+    """Confirms files in list exist"""
+    return all([pathlib.Path(file).exists() for file in files]) if files else False
 
 
 if __name__ == "__main__":

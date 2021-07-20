@@ -4,12 +4,14 @@ import os
 import pathlib
 from unittest.mock import patch
 
+import pytest
 from githubclient import prfile
 
 
 NOW = datetime.datetime.now().strftime("%H%M%S")
 TEST_TOML = "tests/fixtures/.repoconfig_test.toml"
 MOCK_FILES = ["filename01.txt", "filename02.txt"]
+VALID_FILES = ["./tests/prfile_test.py", "./tests/repoactions_test.py"]
 
 
 def test_main() -> None:
@@ -20,11 +22,12 @@ def test_main() -> None:
 
     with patch.object(prfile, "CONFIG_FILE", filename):
         with patch("builtins.input", lambda user_in: "mock"):
-            prfile.main(prfile.cli_parser(MOCK_FILES))
+            with pytest.raises(FileNotFoundError):
+                prfile.main(prfile.cli_parser(MOCK_FILES))
+
+            prfile.main(prfile.cli_parser(VALID_FILES))
 
         assert os.path.isfile(filename)
-
-        prfile.main(prfile.cli_parser(MOCK_FILES))
 
         os.remove(filename)
 
@@ -80,3 +83,12 @@ def test_fill_config() -> None:
                 assert value == "Testing"
             else:
                 assert value == "mock"
+
+
+def test_all_files_exist() -> None:
+    """File existance"""
+
+    assert prfile.all_files_exist(VALID_FILES)
+
+    assert not prfile.all_files_exist(MOCK_FILES)
+    assert not prfile.all_files_exist([])

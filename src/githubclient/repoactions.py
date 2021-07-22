@@ -183,6 +183,7 @@ class RepoActions(APIClient):
         base_branch: str,
         pr_title: str = "Auto PR",
         pr_body: str = "PR Auto Generated",
+        draft: bool = False,
     ) -> RepoReturn:
         """Create PR of new_branch merging into base_branch"""
         # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
@@ -197,6 +198,7 @@ class RepoActions(APIClient):
             "base": base_branch,
             "body": pr_body,
             "maintainer_can_modify": True,
+            "draft": draft,
         }
 
         result = self.git_post(endpoint, payload)

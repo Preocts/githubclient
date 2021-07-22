@@ -22,10 +22,11 @@ def test_main() -> None:
 
     with patch.object(prfile, "CONFIG_FILE", filename):
         with patch("builtins.input", lambda user_in: "mock"):
-            with pytest.raises(FileNotFoundError):
-                prfile.main(prfile.cli_parser(MOCK_FILES))
+            with patch.object(prfile, "run_user_prompt"):
+                with pytest.raises(FileNotFoundError):
+                    prfile.main(prfile.cli_parser(MOCK_FILES))
 
-            prfile.main(prfile.cli_parser(VALID_FILES))
+                prfile.main(prfile.cli_parser(VALID_FILES))
 
         assert os.path.isfile(filename)
 
@@ -92,3 +93,42 @@ def test_all_files_exist() -> None:
 
     assert not prfile.all_files_exist(MOCK_FILES)
     assert not prfile.all_files_exist([])
+
+
+def test_user_prompt() -> None:
+    with patch("builtins.input", lambda user_in: "hello"):
+        result = prfile.get_input("")
+        assert result == "hello"
+
+
+def test_run_user_prompt() -> None:
+    """Runs the gambit of possible user prompts"""
+    user_inputs = ["T", "mock", "m", "mock", "s"]
+
+    with patch.object(prfile, "get_input", side_effect=user_inputs):
+        result = prfile.run_user_prompt()
+
+    assert result.message == "mock"
+    assert result.title == "mock"
+
+
+def test_run_user_prompt_defaults() -> None:
+    """Blanks title and message, assert restore of defaults"""
+    user_inputs = ["t", "", "m", "", "s"]
+
+    with patch.object(prfile, "get_input", side_effect=user_inputs):
+        result = prfile.run_user_prompt()
+
+    assert result.message == prfile.DEFAULT_MESSAGE
+    assert result.title == prfile.DEFAULT_TITLE
+
+
+def test_run_user_prompt_abort() -> None:
+    """Let us escape"""
+    user_inputs = ["", "", "", "", "a"]
+
+    with patch.object(prfile, "get_input", side_effect=user_inputs) as mocked:
+        with pytest.raises(SystemExit):
+            _ = prfile.run_user_prompt()
+
+        assert mocked.call_count == 5

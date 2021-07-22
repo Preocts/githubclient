@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import pathlib
 import sys
+from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
@@ -25,11 +26,24 @@ from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
 
+import colorama
 import toml
+from colorama import Fore
 
 REPO_URL = "https://github.com/Preocts/githubclient"
 CONFIG_FILE = ".default_config.toml"
 CWD = pathlib.Path.cwd()
+DEFAULT_NEW_BRANCH = datetime.now().isoformat()
+DEFAULT_TITLE = f"{DEFAULT_NEW_BRANCH} - Automated PR request"
+DEFAULT_MESSAGE = f"{DEFAULT_NEW_BRANCH} - Automated PR request"
+
+
+class PromptValues(NamedTuple):
+    """Dataclass to hold prompt values"""
+
+    new_branch: str
+    title: str
+    message: str
 
 
 class RepoConfig(NamedTuple):
@@ -102,11 +116,49 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
     config = fill_config(load_config(CONFIG_FILE, args))
-    if not all_files_exist(args.filenames):
-        raise FileNotFoundError(f"Unable to find files: {args.filenames}")
     save_config(CONFIG_FILE, config)
 
+    if not all_files_exist(args.filenames):
+        raise FileNotFoundError(f"Unable to find files: {args.filenames}")
+
+    prompt_values = run_user_prompt()
+
+    print(prompt_values)
+
     return 0
+
+
+def get_input(prompt: str) -> str:
+    """Get user input"""
+    return input(prompt)
+
+
+def run_user_prompt() -> PromptValues:
+    """Allow user to update values or abort"""
+    new_branch = DEFAULT_NEW_BRANCH
+    title = DEFAULT_TITLE
+    message = DEFAULT_MESSAGE
+    input_prompt = "set (t)itle, set (m)essage, (s)ubmit, (a)bort (t/m/s/a)? "
+    uinput = ""
+
+    while uinput != "s":
+        print(f"\n{Fore.GREEN}New Branch: {Fore.WHITE}{new_branch}")
+        print(f"{Fore.GREEN}PR Title  : {Fore.WHITE}{title}")
+        print(f"{Fore.GREEN}PR Message: {Fore.WHITE}{message}")
+        print("-" * 20)
+        uinput = get_input(input_prompt).lower()
+        if uinput == "a":
+            sys.exit(1)
+        elif uinput == "t":
+            title = get_input("Enter new title: ")
+        elif uinput == "m":
+            message = get_input("Enter new message: ")
+
+    return PromptValues(
+        new_branch=new_branch if new_branch else DEFAULT_NEW_BRANCH,
+        title=title if title else DEFAULT_TITLE,
+        message=message if message else DEFAULT_MESSAGE,
+    )
 
 
 def save_config(filename: str, config: RepoConfig) -> None:
@@ -147,4 +199,5 @@ def all_files_exist(files: List[str]) -> bool:
 
 
 if __name__ == "__main__":
+    colorama.init(autoreset=True)
     sys.exit(main(cli_parser()))

@@ -85,14 +85,14 @@ class RepoActions(APIClient):
         )
 
     def create_blob_tree(
-        self, branch_sha: str, blob_shas: List[Tuple[str, str]]
+        self, branch_sha: str, blob_names: List[Tuple[str, str]]
     ) -> RepoReturn:
         """
         Link blob(s) to a tree at the branch provided
 
         Args:
             branch_sha: SHA of branch to create tree
-            blob_shas: List of ([blob SHA], [filename])
+            blob_names: List of ([blob SHA], [filename])
         """
         # https://docs.github.com/en/rest/reference/git#create-a-tree
 
@@ -101,7 +101,7 @@ class RepoActions(APIClient):
         endpoint = f"/repos/{self.owner}/{self.repo}/git/trees"
         trees: List[Dict[str, str]] = []
 
-        for blob_sha, file_path in blob_shas:
+        for blob_sha, file_path in blob_names:
             trees.append(
                 {
                     "path": file_path,

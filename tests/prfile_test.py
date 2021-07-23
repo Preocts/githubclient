@@ -23,14 +23,37 @@ def test_main() -> None:
     with patch.object(prfile, "CONFIG_FILE", filename):
         with patch("builtins.input", lambda user_in: "mock"):
             with patch.object(prfile, "run_user_prompt"):
-                with pytest.raises(FileNotFoundError):
-                    prfile.main(prfile.cli_parser(MOCK_FILES))
+                with patch.object(prfile, "RepoActions"):
+                    with pytest.raises(FileNotFoundError):
+                        prfile.main(prfile.cli_parser(MOCK_FILES))
 
-                prfile.main(prfile.cli_parser(VALID_FILES))
+                    result = prfile.main(prfile.cli_parser(VALID_FILES))
 
         assert os.path.isfile(filename)
 
-        os.remove(filename)
+    os.remove(filename)
+
+    assert result == 0
+
+
+def test_main_error() -> None:
+    """Mock failure at GitHub process"""
+    filename = f"tests/fixtures/temp_{NOW}"
+
+    assert not os.path.isfile(filename)
+
+    with patch.object(prfile, "CONFIG_FILE", filename):
+        with patch("builtins.input", lambda user_in: "mock"):
+            with patch.object(prfile, "run_user_prompt"):
+                with patch.object(prfile, "create_pull_request", return_value=""):
+
+                    result = prfile.main(prfile.cli_parser(VALID_FILES))
+
+        assert os.path.isfile(filename)
+
+    os.remove(filename)
+
+    assert result == 1
 
 
 def test_parser_file_names() -> None:
@@ -65,6 +88,7 @@ def test_load_toml() -> None:
     assert result.useremail
     assert result.username
     assert result.usertoken
+    assert result.basebranch
 
     result = prfile.load_config(TEST_TOML, user_args)
 

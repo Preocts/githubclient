@@ -3,16 +3,18 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/githubclient/main)
 [![Python package](https://github.com/Preocts/githubclient/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/Preocts/githubclient/actions/workflows/python-tests.yml)
 
-# Create branch, add file, and make pull request using GitHub API
+# Submit text files to a target repo as a pull request on new branch
 
 **Current Activity**
 - [x] Metrics capture to debug console
 - [x] Rewrite API layer (we are here)
 - [x] Refactor client class to use API layer
 - [~] Create pip installable layer
-- [_] Add CLI interface
-  - [_] Send to repo as Pull Request
+- [~] Add CLI interface
+  - [x] Send to repo as Pull Request
   - [_] Send to gist (create/update)
+- [_] Update installation and usage documentation
+- [_] Rename project
 
 ---
 

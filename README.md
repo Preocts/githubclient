@@ -9,7 +9,7 @@
 - [x] Metrics capture to debug console
 - [x] Rewrite API layer (we are here)
 - [x] Refactor client class to use API layer
-- [~] Create pip installable layer
+- [x] Create pip installable layer
 - [~] Add CLI interface
   - [x] Send to repo as Pull Request
   - [_] Send to gist (create/update)
@@ -25,7 +25,7 @@
 ---
 
 ### Requires
-- Python >= 3.7
+- Python >= 3.8
 - urllib3
 
 ---

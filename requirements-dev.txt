@@ -87,7 +87,7 @@ toml==0.10.2
     #   pre-commit
     #   pytest
     #   tox
-tomli==1.0.4
+tomli==1.1.0
     # via black
 tox==3.24.0
     # via -r requirements-dev.in

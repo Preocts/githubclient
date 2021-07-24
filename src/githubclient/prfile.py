@@ -275,5 +275,4 @@ def load_files(filenames: List[str]) -> List[str]:
 
 
 if __name__ == "__main__":
-    colorama.init(autoreset=True)
-    sys.exit(main(cli_parser()))
+    main_cli()

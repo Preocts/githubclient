@@ -126,6 +126,12 @@ def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     return parser.parse_args() if args is None else parser.parse_args(args)
 
 
+def main_cli() -> None:
+    """CLI Point of Entry"""
+    colorama.init(autoreset=True)
+    sys.exit(main(cli_parser()))
+
+
 def main(args: argparse.Namespace) -> int:
     """Main CLI process"""
     logging.basicConfig(level="DEBUG" if args.debug else "ERROR")

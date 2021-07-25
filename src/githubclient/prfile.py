@@ -144,6 +144,8 @@ def main(args: argparse.Namespace) -> int:
 
     prompt_values = run_user_prompt()
 
+    inject_env_secrets(config)
+
     result = create_pull_request(prompt_values, config, args.filenames, args.draft)
 
     if result:
@@ -225,6 +227,12 @@ def all_files_exist(files: List[str]) -> bool:
     return all([pathlib.Path(file).exists() for file in files]) if files else False
 
 
+def inject_env_secrets(config: RepoConfig) -> None:
+    """Push required values to environ"""
+    os.environ["GITHUB_AUTH_TOKEN"] = config.usertoken
+    os.environ["GITHUB_USER_NAME"] = config.username
+
+
 def create_pull_request(
     prompt_values: PromptValues,
     config: RepoConfig,
@@ -232,8 +240,6 @@ def create_pull_request(
     draft: bool = False,
 ) -> str:
     """Create pull request with indicated files, returns url on success"""
-    os.environ["GITHUB_AUTH_TOKEN"] = config.usertoken
-    os.environ["GITHUB_USER_NAME"] = config.username
 
     client = RepoActions(config.ownername, config.reponame)
 

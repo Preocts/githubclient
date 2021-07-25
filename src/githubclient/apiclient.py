@@ -52,6 +52,9 @@ class APIClient:
             body=json.dumps(payload),
         )
 
+        if result.status not in range(200, 299):
+            self.logger.error("%s - %s", endpoint, result.data)
+
         return self._jsonify(result.data)
 
     @capmetrics
@@ -63,6 +66,9 @@ class APIClient:
             url=self.BASE_URL + endpoint,
             body=json.dumps(payload),
         )
+
+        if result.status not in range(200, 299):
+            self.logger.error("%s - %s", endpoint, result.data)
 
         return self._jsonify(result.data)
 

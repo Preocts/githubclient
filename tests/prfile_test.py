@@ -14,6 +14,18 @@ MOCK_FILES = ["filename01.txt", "filename02.txt"]
 VALID_FILES = ["./tests/prfile_test.py", "./tests/repoactions_test.py"]
 
 
+def test_main_cli() -> None:
+    """Check CLI input"""
+    with patch.object(prfile, "cli_parser") as cli_parser:
+        with patch.object(prfile, "main", return_value=1) as main:
+
+            with pytest.raises(SystemExit):
+                prfile.main_cli()
+
+            main.assert_called_once()
+            cli_parser.assert_called_once()
+
+
 def test_main() -> None:
     """Should load dry (no config) and with empty config"""
     filename = f"tests/fixtures/temp_{NOW}"

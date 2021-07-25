@@ -225,11 +225,3 @@ class RepoActions(APIClient):
         return self.RepoReturn(
             full_return=result,
         )
-
-    def console_response(self, status: int, msg: str, result: str) -> None:
-        """Helpful console output on success/fail"""
-        postfix = "Success" if status in range(200, 299) else f"Failure ({result})"
-
-        log = self.logger.debug if status in range(200, 299) else self.logger.error
-
-        log("%s : %s", msg, postfix)

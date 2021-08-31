@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 import vcr
 from githubclient.repoactions import RepoActions
-from secretbox.loadenv import LoadEnv
+from secretbox import SecretBox
 
 TEST_REPO = "gitclient_test"
 TEST_OWNER = "Preocts"
@@ -62,7 +62,7 @@ def fixture_envmock() -> Generator[None, None, None]:
 @pytest.fixture(scope="function", name="repo")
 def fixture_repo(envmock: None) -> Generator[RepoActions, None, None]:
     """Create the client fixture"""
-    _ = LoadEnv(auto_load=True)
+    _ = SecretBox(auto_load=True)
 
     yield RepoActions(TEST_OWNER, TEST_REPO)
 

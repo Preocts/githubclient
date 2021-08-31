@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 import vcr
 from githubclient.apiclient import APIClient
-from secretbox.loadenv import LoadEnv
+from secretbox import SecretBox
 
-_ = LoadEnv(auto_load=True)
+_ = SecretBox(auto_load=True)
 
 TEST_USER = "Preocts"
 VALID_MOCK_ENV = {

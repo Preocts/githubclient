@@ -1,4 +1,6 @@
 """Unit testing for prfile.py"""
+from __future__ import annotations
+
 import datetime
 import os
 import pathlib

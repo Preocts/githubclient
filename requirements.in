@@ -1,0 +1,4 @@
+colorama
+secretbox
+toml
+urllib3

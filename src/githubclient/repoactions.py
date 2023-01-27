@@ -3,11 +3,10 @@ GitHub Actions for Repos
 
 Author: Preocts (Preocts#8196)
 """
+from __future__ import annotations
+
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import NamedTuple
-from typing import Tuple
 
 from githubclient.apiclient import APIClient
 
@@ -18,7 +17,7 @@ class RepoActions(APIClient):
     class RepoReturn(NamedTuple):
         """Return values from Repo actions"""
 
-        full_return: Dict[str, Any] = {}
+        full_return: dict[str, Any] = {}
         sha: str = ""
         url: str = ""
         html_url: str = ""
@@ -85,7 +84,7 @@ class RepoActions(APIClient):
         )
 
     def create_blob_tree(
-        self, branch_sha: str, blob_names: List[Tuple[str, str]]
+        self, branch_sha: str, blob_names: list[tuple[str, str]]
     ) -> RepoReturn:
         """
         Link blob(s) to a tree at the branch provided
@@ -99,7 +98,7 @@ class RepoActions(APIClient):
         self.logger.debug("Creating Tree")
 
         endpoint = f"/repos/{self.owner}/{self.repo}/git/trees"
-        trees: List[Dict[str, str]] = []
+        trees: list[dict[str, str]] = []
 
         for blob_sha, file_path in blob_names:
             trees.append(
@@ -210,7 +209,7 @@ class RepoActions(APIClient):
             html_url=result.get("html_url", ""),
         )
 
-    def add_lables(self, number: str, labels: List[str]) -> RepoReturn:
+    def add_lables(self, number: str, labels: list[str]) -> RepoReturn:
         """Add label(s) to an existing pull request"""
         # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
 

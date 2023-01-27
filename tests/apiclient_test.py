@@ -1,4 +1,6 @@
 """Unit tests for apiclient.py"""
+from __future__ import annotations
+
 import os
 from typing import Any
 from unittest.mock import patch
@@ -48,8 +50,8 @@ def test_missing_env_username(caplog: Any) -> None:
 
 def test_jsonify() -> None:
     """Convert bytes to json or return bytes in error"""
-    valid = '{"test": "response"}'.encode()
-    invalid = "test: response".encode()
+    valid = b'{"test": "response"}'
+    invalid = b"test: response"
 
     assert isinstance(APIClient._jsonify(valid), dict)
     assert APIClient._jsonify(invalid) == {"error": invalid}

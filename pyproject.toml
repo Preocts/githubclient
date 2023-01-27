@@ -1,0 +1,135 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "githubclient"
+version = "0.4.0"
+requires-python = ">=3.7"
+description = "Submit text files to a target repo as a pull request on new branch"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { email = "preocts@preocts.com", name = "Preocts" }
+]
+maintainers = []
+keywords = []
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "black",
+    "mypy",
+    "flake8",
+    "flake8-builtins",
+    "flake8-pep585",
+    "types-toml",
+]
+test = [
+    "pytest",
+    "pytest-randomly",
+    "coverage",
+    "tox",
+    "vcrpy",
+]
+
+[project.urls]
+homepage = "https://github.com/Preocts/githubclient"
+
+# CLI scripts if needed
+# [project.scripts]
+# python-src-example = "githubclient.sample:main"
+
+[tool.setuptools.package-data]
+"githubclient" = ["py.typed"]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_incomplete_defs = false
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+branch = true
+source = [
+    "tests",
+]
+source_pkgs = [
+    "githubclient",
+]
+
+[tool.coverage.paths]
+source = [
+    "src/",
+    "*/site-packages",
+]
+test = [
+    "tests/",
+    "*/tests",
+]
+
+[tool.coverage.report]
+exclude_lines =[
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
+    "if TYPE_CHECKING:",
+]
+
+# This is ignored by flake8, here in case they decide to add it in the future
+[tool.flake8]
+ignore = "W503,E203"
+max-line-length = 88
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py37,py38,py39,py310,py311,py312,coverage,mypy,pre-commit
+skip_missing_interpreters = true
+isolated_build = True
+
+[testenv]
+deps = .[test]
+commands =
+    coverage run -p -m pytest tests/
+
+[testenv:coverage]
+depends = py37,py38,py39,py310,py311,py312
+parallel_show_output = true
+commands =
+    python -m coverage combine
+    python -m coverage report -m --fail-under=50
+    python -m coverage json
+
+[testenv:mypy]
+deps =
+    mypy
+commands =
+    mypy -p githubclient --no-incremental
+
+[testenv:pre-commit]
+depends = coverage
+parallel_show_output = true
+skip_install = true
+deps = pre-commit
+commands = pre-commit run --all-files --show-diff-on-failure
+"""

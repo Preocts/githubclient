@@ -3,11 +3,12 @@ Abstract base API actions against GitHub (CRUD operations)
 
 Author: Preocts <Preocts#8196>
 """
+from __future__ import annotations
+
 import json
 import logging
 import os
 from typing import Any
-from typing import Dict
 
 import urllib3
 from githubclient.apimetrics import capmetrics
@@ -43,7 +44,7 @@ class APIClient:
         )
 
     @capmetrics
-    def git_get(self, endpoint: str, payload: Dict[str, Any] = {}) -> Dict[str, Any]:
+    def git_get(self, endpoint: str, payload: dict[str, Any] = {}) -> dict[str, Any]:
         """Handles all GET requests to GitHub"""
 
         result = self.apiclient.request(
@@ -58,7 +59,7 @@ class APIClient:
         return self._jsonify(result.data)
 
     @capmetrics
-    def git_post(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def git_post(self, endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Handles all POST requests to GitHub, payload is translated to body"""
 
         result = self.apiclient.request(
@@ -73,7 +74,7 @@ class APIClient:
         return self._jsonify(result.data)
 
     @staticmethod
-    def _jsonify(data: bytes) -> Dict[str, Any]:
+    def _jsonify(data: bytes) -> dict[str, Any]:
         """Translate response bytes to dict, returns key 'error' if failed"""
         try:
             return json.loads(data.decode("utf-8"))

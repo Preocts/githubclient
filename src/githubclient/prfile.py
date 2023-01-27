@@ -10,14 +10,11 @@ import logging
 import os
 import pathlib
 import sys
+from collections.abc import MutableMapping
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import MutableMapping
 from typing import NamedTuple
-from typing import Optional
-from typing import Sequence
 
 import colorama
 import toml
@@ -50,7 +47,7 @@ class RepoConfig(NamedTuple):
     usertoken: str = ""
     basebranch: str = ""
 
-    def to_toml(self) -> Dict[str, Any]:
+    def to_toml(self) -> dict[str, Any]:
         """Returns config as nested dict under key: repo"""
         return {"repo": self._asdict()}
 
@@ -68,7 +65,7 @@ class RepoConfig(NamedTuple):
         )
 
 
-def cli_parser(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def cli_parser(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Configure argparse"""
     parser = argparse.ArgumentParser(
         prog="prfiles",
@@ -200,7 +197,7 @@ def save_config(filename: str, config: RepoConfig) -> None:
 def load_config(filename: str, args: argparse.Namespace) -> RepoConfig:
     """Load config toml, merge with and CLI optionals"""
     try:
-        with open(pathlib.Path(CWD / filename), "r") as toml_in:
+        with open(pathlib.Path(CWD / filename)) as toml_in:
             config = RepoConfig.from_toml(toml.load(toml_in))
     except FileNotFoundError:
         config = RepoConfig()
@@ -216,13 +213,13 @@ def load_config(filename: str, args: argparse.Namespace) -> RepoConfig:
 
 def fill_config(config: RepoConfig) -> RepoConfig:
     """Prompts user for missing config values"""
-    filled_config: Dict[str, str] = {}
+    filled_config: dict[str, str] = {}
     for key, value in config._asdict().items():
         filled_config[key] = value if value else input(f"Enter {key}: ")
     return RepoConfig(**filled_config)
 
 
-def all_files_exist(files: List[str]) -> bool:
+def all_files_exist(files: list[str]) -> bool:
     """Confirms files in list exist"""
     return all([pathlib.Path(file).exists() for file in files]) if files else False
 
@@ -236,7 +233,7 @@ def inject_env_secrets(config: RepoConfig) -> None:
 def create_pull_request(
     prompt_values: PromptValues,
     config: RepoConfig,
-    filenames: List[str],
+    filenames: list[str],
     draft: bool = False,
 ) -> str:
     """Create pull request with indicated files, returns url on success"""
@@ -271,11 +268,11 @@ def create_pull_request(
     return pull_request.html_url
 
 
-def load_files(filenames: List[str]) -> List[str]:
+def load_files(filenames: list[str]) -> list[str]:
     """Loads files"""
-    files: List[str] = []
+    files: list[str] = []
     for filename in filenames:
-        with open(filename, "r", encoding="utf-8") as infile:
+        with open(filename, encoding="utf-8") as infile:
             files.append(infile.read())
     return files
 

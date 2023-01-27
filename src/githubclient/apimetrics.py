@@ -3,23 +3,21 @@ Capture metrics of api requests: elapse (ms) and object size (bytes)
 
 Author: Preocts (Preocts#8196)
 """
+from __future__ import annotations
+
 import logging
 import sys
 import time
+from collections.abc import Callable
 from functools import wraps
 from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Union
 
 logger = logging.getLogger("APIMetrics")
 
 
-def capmetrics(func: Callable[..., Dict[str, Any]]) -> Callable[..., Dict[str, Any]]:
+def capmetrics(func: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]:
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def wrapper(*args: Any, **kwargs: Any) -> dict[str, Any]:
         now = time.time()
 
         tic = time.perf_counter_ns()
@@ -42,7 +40,7 @@ def capmetrics(func: Callable[..., Dict[str, Any]]) -> Callable[..., Dict[str, A
     return wrapper
 
 
-def sizeof(obj: Union[Dict[str, Any], List[Any], Tuple[Any, ...]]) -> int:
+def sizeof(obj: dict[str, Any] | list[Any] | tuple[Any, ...]) -> int:
     """Return total size in bytes of object (included nested)"""
     size_of = 0
     for val in obj.values() if isinstance(obj, dict) else obj:

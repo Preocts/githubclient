@@ -10,19 +10,18 @@ import logging
 import os
 import pathlib
 import sys
-from collections.abc import MutableMapping
 from collections.abc import Sequence
+from configparser import ConfigParser
 from datetime import datetime
-from typing import Any
 from typing import NamedTuple
 
 import colorama
-import toml
 from colorama import Fore
 from githubclient.repoactions import RepoActions
 
 REPO_URL = "https://github.com/Preocts/githubclient"
-CONFIG_FILE = ".default_config.toml"
+CONFIG_FILE = ".default_config.ini"
+CONFIG_SECTION = "GITHUBCLIENT"
 CWD = pathlib.Path.cwd()
 DEFAULT_NEW_BRANCH = datetime.now().strftime("%Y%m%d.%H%M%S")
 DEFAULT_TITLE = f"{DEFAULT_NEW_BRANCH} - Automated PR request"
@@ -47,21 +46,32 @@ class RepoConfig(NamedTuple):
     usertoken: str = ""
     basebranch: str = ""
 
-    def to_toml(self) -> dict[str, Any]:
-        """Returns config as nested dict under key: repo"""
-        return {"repo": self._asdict()}
+    def to_configparser(self) -> ConfigParser:
+        """Return as ConfigParser."""
+        config = ConfigParser()
+        config[CONFIG_SECTION] = {
+            "reponame": self.reponame,
+            "ownername": self.ownername,
+            "username": self.username,
+            "useremail": self.useremail,
+            "usertoken": self.usertoken,
+            "basebranch": self.basebranch,
+        }
+        return config
 
     @classmethod
-    def from_toml(cls, toml_in: MutableMapping[str, Any]) -> RepoConfig:
-        """Generate class from toml load"""
-        repo = toml_in.get("repo", {})
+    def from_configparser(cls, configparser: ConfigParser) -> RepoConfig:
+        """Generate class from ConfigParser."""
+        if CONFIG_SECTION not in configparser:
+            return cls()
+        section = configparser[CONFIG_SECTION]
         return cls(
-            reponame=repo.get("reponame", ""),
-            ownername=repo.get("ownername", ""),
-            username=repo.get("username", ""),
-            useremail=repo.get("useremail", ""),
-            usertoken=repo.get("usertoken", ""),
-            basebranch=repo.get("basebranch", ""),
+            reponame=section.get("reponame", ""),
+            ownername=section.get("ownername", ""),
+            username=section.get("username", ""),
+            useremail=section.get("useremail", ""),
+            usertoken=section.get("usertoken", ""),
+            basebranch=section.get("basebranch", ""),
         )
 
 
@@ -189,18 +199,15 @@ def run_user_prompt() -> PromptValues:
 
 
 def save_config(filename: str, config: RepoConfig) -> None:
-    """Save toml config in the working directory"""
-    with open(pathlib.Path(CWD / filename), "w") as toml_out:
-        toml.dump(config.to_toml(), toml_out)
+    """Save RepoConfig as ini in current working directory."""
+    RepoConfig.to_configparser(config).write(open(filename, "w"))
 
 
 def load_config(filename: str, args: argparse.Namespace) -> RepoConfig:
-    """Load config toml, merge with and CLI optionals"""
-    try:
-        with open(pathlib.Path(CWD / filename)) as toml_in:
-            config = RepoConfig.from_toml(toml.load(toml_in))
-    except FileNotFoundError:
-        config = RepoConfig()
+    """Load config ini, merge with and CLI optionals."""
+    parser = ConfigParser()
+    parser.read(filename)
+    config = RepoConfig.from_configparser(parser)
     return RepoConfig(
         reponame=config.reponame if args.reponame is None else args.reponame,
         ownername=config.ownername if args.ownername is None else args.ownername,

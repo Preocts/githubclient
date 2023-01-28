@@ -11,7 +11,6 @@ import os
 from typing import Any
 
 import urllib3
-from githubclient.apimetrics import capmetrics
 
 
 class APIClient:
@@ -43,7 +42,6 @@ class APIClient:
             retries=urllib3.Retry(total=3, backoff_factor=2),
         )
 
-    @capmetrics
     def git_get(self, endpoint: str, payload: dict[str, Any] = {}) -> dict[str, Any]:
         """Handles all GET requests to GitHub"""
 
@@ -58,7 +56,6 @@ class APIClient:
 
         return self._jsonify(result.data)
 
-    @capmetrics
     def git_post(self, endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Handles all POST requests to GitHub, payload is translated to body"""
 

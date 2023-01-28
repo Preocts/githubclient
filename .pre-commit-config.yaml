@@ -57,4 +57,3 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-urllib3
-          - types-colorama

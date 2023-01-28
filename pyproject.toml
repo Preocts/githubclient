@@ -34,7 +34,6 @@ dev = [
     "flake8-builtins",
     "flake8-pep585",
     "types-urllib3",
-    "types-colorama",
 ]
 test = [
     "pytest",

@@ -15,8 +15,6 @@ from configparser import ConfigParser
 from datetime import datetime
 from typing import NamedTuple
 
-import colorama
-from colorama import Fore
 from githubclient.repoactions import RepoActions
 
 REPO_URL = "https://github.com/Preocts/githubclient"
@@ -135,7 +133,6 @@ def cli_parser(args: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main_cli() -> None:
     """CLI Point of Entry"""
-    colorama.init(autoreset=True)
     sys.exit(main(cli_parser()))
 
 
@@ -157,10 +154,10 @@ def main(args: argparse.Namespace) -> int:
 
     if result:
         opt_word = " draft " if args.draft else " "
-        print(f"{Fore.GREEN}Pull request{opt_word}created: ", end="")
+        print(f"Pull request{opt_word}created: ", end="")
         print(result)
     else:
-        print(f"{Fore.RED}Something went wrong...")
+        print("Something went wrong...")
 
     return 0 if result else 1
 
@@ -179,9 +176,9 @@ def run_user_prompt() -> PromptValues:
     uinput = ""
 
     while uinput != "s":
-        print(f"\n{Fore.GREEN}New Branch: {Fore.WHITE}{new_branch}")
-        print(f"{Fore.GREEN}PR Title  : {Fore.WHITE}{title}")
-        print(f"{Fore.GREEN}PR Message: {Fore.WHITE}{message}")
+        print(f"\nNew Branch: {new_branch}")
+        print(f"PR Title  : {title}")
+        print(f"PR Message: {message}")
         print("-" * 20)
         uinput = get_input(input_prompt).lower()
         if uinput == "a":

@@ -33,7 +33,6 @@ dev = [
     "flake8",
     "flake8-builtins",
     "flake8-pep585",
-    "types-urllib3",
 ]
 test = [
     "pytest",

@@ -1,5 +1,5 @@
 """
-Abstract base API actions against GitHub (CRUD operations)
+Abstract base HTTPS API actions against GitHub (CRUD operations)
 
 Author: Preocts <Preocts#8196>
 """
@@ -13,7 +13,7 @@ from typing import Any
 import urllib3
 
 
-class APIClient:
+class HTTPClient:
     """Connect to the GitHub API"""
 
     BASE_URL = "https://api.github.com"

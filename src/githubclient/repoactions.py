@@ -8,10 +8,10 @@ from __future__ import annotations
 from typing import Any
 from typing import NamedTuple
 
-from githubclient.apiclient import APIClient
+from githubclient.httpclient import HTTPClient
 
 
-class RepoActions(APIClient):
+class RepoActions(HTTPClient):
     """Actions for repos in GitHub"""
 
     class RepoReturn(NamedTuple):

@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import vcr
-from githubclient.apiclient import APIClient
+from githubclient.httpclient import HTTPClient
 
 TEST_USER = "Preocts"
 VALID_MOCK_ENV = {
@@ -26,13 +26,13 @@ gitvcr = vcr.VCR(
 def test_env_loaded() -> None:
     """A token exists"""
     with patch.dict(os.environ, VALID_MOCK_ENV):
-        _ = APIClient()
+        _ = HTTPClient()
 
 
 def test_missing_env_token(caplog: Any) -> None:
     """Stop if token is missing"""
     with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "", "GITHUB_USER_NAME": "MOCK"}):
-        _ = APIClient()
+        _ = HTTPClient()
 
         assert "Missing GITHUB_AUTH_TOKEN" in caplog.text
 
@@ -40,7 +40,7 @@ def test_missing_env_token(caplog: Any) -> None:
 def test_missing_env_username(caplog: Any) -> None:
     """Stop if token is missing"""
     with patch.dict(os.environ, {"GITHUB_AUTH_TOKEN": "MOCK", "GITHUB_USER_NAME": ""}):
-        _ = APIClient()
+        _ = HTTPClient()
 
         assert "Missing GITHUB_USER_NAME" in caplog.text
 
@@ -50,13 +50,13 @@ def test_jsonify() -> None:
     valid = b'{"test": "response"}'
     invalid = b"test: response"
 
-    assert isinstance(APIClient._jsonify(valid), dict)
-    assert APIClient._jsonify(invalid) == {"error": invalid}
+    assert isinstance(HTTPClient._jsonify(valid), dict)
+    assert HTTPClient._jsonify(invalid) == {"error": invalid}
 
 
 def test_get() -> None:
     """Recorded GET test"""
-    client = APIClient()
+    client = HTTPClient()
 
     with gitvcr.use_cassette("test_get.yaml"):
         result = client.git_get("/users/" + TEST_USER)
@@ -66,7 +66,7 @@ def test_get() -> None:
 
 def test_post() -> None:
     """Recorded POST test"""
-    client = APIClient()
+    client = HTTPClient()
     payload = {
         "description": "Unit test",
         "files": {

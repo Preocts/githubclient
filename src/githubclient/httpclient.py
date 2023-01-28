@@ -53,13 +53,12 @@ class HTTPClient:
         if msg:
             raise OSError(", ".join(msg))
 
-    def git_get(self, endpoint: str, payload: dict[str, Any] = {}) -> dict[str, Any]:
+    def git_get(self, endpoint: str) -> dict[str, Any]:
         """Handles all GET requests to GitHub"""
 
         self.apiclient.request(
             method="GET",
             url=endpoint,
-            body=json.dumps(payload),
             headers=self.headers,
         )
         response = self.apiclient.getresponse()

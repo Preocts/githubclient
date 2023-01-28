@@ -39,7 +39,6 @@ test = [
     "pytest-randomly",
     "coverage",
     "tox",
-    "vcrpy",
 ]
 
 [project.urls]

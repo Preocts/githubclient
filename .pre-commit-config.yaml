@@ -56,6 +56,4 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          - types-toml
           - types-urllib3
-          - types-colorama

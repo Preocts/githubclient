@@ -11,7 +11,7 @@ from githubclient import prfile
 
 
 NOW = datetime.datetime.now().strftime("%H%M%S")
-TEST_TOML = "tests/fixtures/.repoconfig_test.toml"
+TEST_INI = "tests/fixtures/repoconfig_test.ini"
 MOCK_FILES = ["filename01.txt", "filename02.txt"]
 VALID_FILES = ["./tests/prfile_test.py", "./tests/repoactions_test.py"]
 
@@ -90,12 +90,10 @@ def test_create_empty_config() -> None:
     os.remove(NOW)
 
 
-def test_load_toml() -> None:
-    """Load test fixture toml"""
+def test_load_config_no_cli_args() -> None:
     empty_args = prfile.cli_parser([])
-    user_args = prfile.cli_parser(["--username", "Preocts"])
 
-    result = prfile.load_config(TEST_TOML, empty_args)
+    result = prfile.load_config(TEST_INI, empty_args)
 
     assert result.ownername
     assert result.reponame
@@ -104,7 +102,11 @@ def test_load_toml() -> None:
     assert result.usertoken
     assert result.basebranch
 
-    result = prfile.load_config(TEST_TOML, user_args)
+
+def test_load_config_with_cli_args() -> None:
+    user_args = prfile.cli_parser(["--username", "Preocts"])
+
+    result = prfile.load_config(TEST_INI, user_args)
 
     assert result.username == "Preocts"
 

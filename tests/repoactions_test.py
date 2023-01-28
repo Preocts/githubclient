@@ -6,169 +6,193 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-import vcr
 from githubclient.repoactions import RepoActions
+from githubclient.repoactions import RepoReturn
 
-TEST_REPO = "gitclient_test"
-TEST_OWNER = "Preocts"
-TEST_BRANCH = "main"
-TEST_NEW_BRANCH = "main2"
-
-MOCK_ENV = {
+VALID_MOCK_ENV = {
     "GITHUB_AUTH_TOKEN": "MOCK",
     "GITHUB_USER_NAME": "MOCK",
 }
 
-# VCR FILE NAMES
-GET_BRANCH_GOOD = "get_branch_success.yaml"
-GET_BRANCH_FAIL = "get_branch_fail.yaml"
-CREATE_BRANCH_GOOD = "create_branch_success.yaml"
-CREATE_BRANCH_FAIL = "create_branch_fail.yaml"
-CREATE_BLOBS_GOOD = "create_blobs_success.yaml"
-CREATE_TREE_GOOD = "create_tree_success.yaml"
-CREATE_COMMIT_GOOD = "create_commit_success.yaml"
-UPDATE_REF_GOOD = "update_ref_success.yaml"
-CREATE_PR_GOOD = "create_pr_success.yaml"
-ADD_LABELS_GOOD = "add_labels_success.yaml"
 
-# TEST REQUIRED SHA VALUES
-# NOTE: Would love to have a better way here.
-# These are pulled from each test, used in the next
-NEW_BRANCH_SHA = "08746b8758f3f2047ab3720a5b1b457dfb7f11bf"
-NEW_BLOBS_SHA = [
-    ("e5b064423801f1397792727eb6d25dfb0552cea7", "file01.txt"),
-    ("0257d4d2d3d5f1acf80e7d1832274b76865bbab9", "file02.txt"),
-]
-NEW_TREE_SHA = "b52e7bad122209b1c11d27c5eaf84e99e513ef65"
-NEW_COMMIT_SHA = "4e51a63f07f40f59823d35b0b9fe019ddfd6357b"
-NEW_PR_NUMBER = "8"
-
-
-gitvcr = vcr.VCR(
-    record_mode="once",
-    filter_headers=["Authorization"],
-    match_on=["uri", "method"],
-    serializer="yaml",
-    cassette_library_dir="tests/fixtures",
-)
-
-
-@pytest.fixture(scope="function", name="envmock")
-def fixture_envmock() -> Generator[None, None, None]:
-    """Inject mock environ vars"""
-    with patch.dict(os.environ, MOCK_ENV):
+@pytest.fixture(autouse=True)
+def mock_environs() -> Generator[None, None, None]:
+    with patch.dict(os.environ, VALID_MOCK_ENV):
         yield None
 
 
-@pytest.fixture(scope="function", name="repo")
-def fixture_repo(envmock: None) -> Generator[RepoActions, None, None]:
-    """Create the client fixture"""
-
-    yield RepoActions(TEST_OWNER, TEST_REPO)
+@pytest.fixture
+def repo() -> Generator[RepoActions, None, None]:
+    yield RepoActions("mock_owner", "mock_repo")
 
 
-def test_get_branch_success(repo: RepoActions) -> None:
-    """Successful pull branch"""
+def test_get_branch(repo: RepoActions) -> None:
+    resp = {
+        "commit": {
+            "sha": "mock_sha",
+        },
+        "url": "mock_url",
+        "html_url": "mock_html_url",
+    }
+    expected_url = "/repos/mock_owner/mock_repo/branches/mock_branch"
 
-    with gitvcr.use_cassette(GET_BRANCH_GOOD):
-        result = repo.get_branch(TEST_BRANCH)
+    with patch.object(repo.http_client, "git_get", return_value=resp) as mock_get:
+        result = repo.get_branch("mock_branch")
 
-    assert result.sha
-
-
-def test_get_branch_fail(repo: RepoActions) -> None:
-    """Fail to pull branch"""
-    # NOTE: Assumes TEST_BRANCH*3 does not exist
-    with gitvcr.use_cassette(GET_BRANCH_FAIL):
-        result = repo.get_branch(TEST_BRANCH * 3)
-
-    assert not result.sha
-
-
-def test_create_branch_success(repo: RepoActions) -> None:
-    """Succeful create branch"""
-
-    with gitvcr.use_cassette(CREATE_BRANCH_GOOD):
-        result = repo.create_branch(TEST_BRANCH, TEST_NEW_BRANCH)
-
-    assert result.sha
+    mock_get.assert_called_once_with(expected_url)
+    assert result.sha == "mock_sha"
+    assert result.url == "mock_url"
+    assert result.html_url == "mock_html_url"
+    assert result.full_return == resp
 
 
-def test_create_branch_fail(repo: RepoActions) -> None:
-    """Fail to create a branch because existing and invalid"""
+def test_create_branch(repo: RepoActions) -> None:
+    mock_branch = RepoReturn(sha="mock_sha")
+    resp = {
+        "object": {
+            "sha": "mock_sha",
+            "url": "mock_url",
+        }
+    }
+    expected_url = "/repos/mock_owner/mock_repo/git/refs"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        with patch.object(repo, "get_branch", return_value=mock_branch):
+            result = repo.create_branch("mock_branch", "mock_new_branch")
 
-    with gitvcr.use_cassette(CREATE_BRANCH_FAIL):
-        result = repo.create_branch(TEST_BRANCH, TEST_BRANCH)
-
-        assert not result.sha
-
-        result = repo.create_branch(TEST_BRANCH, f"{TEST_BRANCH}*{TEST_BRANCH}")
-
-        assert not result.sha
+    mock_post.assert_called_once_with(
+        expected_url,
+        {
+            "ref": "refs/heads/mock_new_branch",
+            "sha": "mock_sha",
+        },
+    )
+    assert result.sha == "mock_sha"
+    assert result.url == "mock_url"
 
 
 def test_create_blob(repo: RepoActions) -> None:
-    """Create two blobs"""
-    mock_blob01 = "There once was a tree on a hill"
-    mock_blob02 = "The end"
+    resp = {"sha": "mock_sha"}
+    expected_url = "/repos/mock_owner/mock_repo/git/blobs"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        result = repo.create_blob("mock file contents")
 
-    with gitvcr.use_cassette(CREATE_BLOBS_GOOD):
-        blob01 = repo.create_blob(mock_blob01)
-        blob02 = repo.create_blob(mock_blob02)
-
-    assert blob01.sha
-    assert blob02.sha
-
-
-def test_create_tree_success(repo: RepoActions) -> None:
-    """Create a tree"""
-
-    with gitvcr.use_cassette(CREATE_TREE_GOOD):
-        result = repo.create_blob_tree(NEW_BRANCH_SHA, NEW_BLOBS_SHA)
-
-    assert result.sha
+    mock_post.assert_called_once_with(
+        expected_url,
+        {
+            "owner": "mock_owner",
+            "repo": "mock_repo",
+            "content": "mock file contents",
+            "encoding": "utf-8",
+        },
+    )
+    assert result.sha == "mock_sha"
 
 
-def test_commit_success(repo: RepoActions) -> None:
-    """Create a commit"""
-    commit_msg = "Hot new commit"
-
-    with gitvcr.use_cassette(CREATE_COMMIT_GOOD):
-        result = repo.create_commit(
-            author_name=TEST_OWNER,
-            author_email=f"{TEST_OWNER}@example.com",
-            branch_sha=NEW_BRANCH_SHA,
-            tree_sha=NEW_TREE_SHA,
-            message=commit_msg,
+def test_create_blob_tree(repo: RepoActions) -> None:
+    resp = {"sha": "mock_sha", "url": "mock_url"}
+    expected_url = "/repos/mock_owner/mock_repo/git/trees"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        result = repo.create_blob_tree(
+            "mock_branch_sha", [("mock_blob_sha", "file.md")]
         )
 
-    assert result.sha
-    assert result.full_return.get("message", "") == commit_msg
+    mock_post.assert_called_once_with(
+        expected_url,
+        {
+            "base_tree": "mock_branch_sha",
+            "owner": "mock_owner",
+            "repo": "mock_repo",
+            "tree": [
+                {
+                    "path": "file.md",
+                    "mode": "100644",
+                    "type": "blob",
+                    "sha": "mock_blob_sha",
+                }
+            ],
+        },
+    )
+    assert result.sha == "mock_sha"
+    assert result.url == "mock_url"
 
 
-def test_update_reference_success(repo: RepoActions) -> None:
-    """Update a branch's reference"""
+def test_create_commit(repo: RepoActions) -> None:
+    resp = {"sha": "mock_sha", "url": "mock_url", "html_url": "mock_html_url"}
+    expected_url = "/repos/mock_owner/mock_repo/git/commits"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        result = repo.create_commit(
+            "mock_author_name",
+            "mock_author_email",
+            "mock_branch_sha",
+            "mock_tree_sha",
+            "mock commit message",
+        )
 
-    with gitvcr.use_cassette(UPDATE_REF_GOOD):
-        result = repo.update_reference(TEST_NEW_BRANCH, NEW_COMMIT_SHA)
+    mock_post.assert_called_once_with(
+        expected_url,
+        {
+            "message": "mock commit message",
+            "author": {
+                "name": "mock_author_name",
+                "email": "mock_author_email",
+            },
+            "parents": ["mock_branch_sha"],
+            "tree": "mock_tree_sha",
+        },
+    )
+    assert result.sha == "mock_sha"
+    assert result.url == "mock_url"
+    assert result.html_url == "mock_html_url"
 
-    assert result.sha
+
+def test_update_reference(repo: RepoActions) -> None:
+    resp = {"object": {"sha": "mock_sha", "url": "mock_url"}}
+    expected_url = "/repos/mock_owner/mock_repo/git/refs/heads/mock_branch"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_patch:
+        result = repo.update_reference("mock_branch", "mock_sha")
+
+    mock_patch.assert_called_once_with(
+        expected_url,
+        {
+            "ref": "refs/heads/mock_branch",
+            "sha": "mock_sha",
+        },
+    )
+    assert result.sha == "mock_sha"
 
 
-def test_create_pr_success(repo: RepoActions) -> None:
-    """Create pull request"""
+def test_create_pull_request(repo: RepoActions) -> None:
+    resp = {"number": 10, "url": "mock_url", "html_url": "mock_html_url"}
+    expected_url = "/repos/mock_owner/mock_repo/pulls"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        result = repo.create_pull_request("mock_branch", "mock_base_branch")
 
-    with gitvcr.use_cassette(CREATE_PR_GOOD):
-        result = repo.create_pull_request(TEST_NEW_BRANCH, TEST_BRANCH)
+    mock_post.assert_called_once_with(
+        expected_url,
+        {
+            "owner": "mock_owner",
+            "repo": "mock_repo",
+            "title": "Auto PR",
+            "head": "mock_branch",
+            "base": "mock_base_branch",
+            "body": "PR Auto Generated",
+            "maintainer_can_modify": True,
+            "draft": False,
+        },
+    )
+    assert result.sha == "10"
+    assert result.url == "mock_url"
+    assert result.html_url == "mock_html_url"
 
-    assert result.sha
-    assert isinstance(result.sha, str)
 
+def test_add_lables(repo: RepoActions) -> None:
+    resp = [{"name": "MockTest01"}, {"name": "MockTest02"}]
+    expected_url = "/repos/mock_owner/mock_repo/issues/10/labels"
+    with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
+        result = repo.add_lables("10", ["MockTest01", "MockTest02"])
 
-def test_add_labels_success(repo: RepoActions) -> None:
-    """Add some labels"""
-    labels = ["MockTest01", "MockTest02"]
-    with gitvcr.use_cassette(ADD_LABELS_GOOD):
-        result = repo.add_lables(NEW_PR_NUMBER, labels)
-
-    assert len(result.full_return) == len(labels)
+    mock_post.assert_called_once_with(
+        expected_url,
+        {"labels": ["MockTest01", "MockTest02"]},
+    )
+    assert len(result.full_return) == len(["MockTest01", "MockTest02"])

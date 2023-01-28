@@ -20,10 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython"
 ]
-dynamic = ["dependencies"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
@@ -33,14 +30,12 @@ dev = [
     "flake8",
     "flake8-builtins",
     "flake8-pep585",
-    "types-urllib3",
 ]
 test = [
     "pytest",
     "pytest-randomly",
     "coverage",
     "tox",
-    "vcrpy",
 ]
 
 [project.urls]
@@ -66,6 +61,7 @@ warn_unused_ignores = true
 module = "tests.*"
 disallow_incomplete_defs = false
 disallow_untyped_defs = false
+warn_unused_ignores = false
 
 [tool.coverage.run]
 branch = true

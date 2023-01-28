@@ -11,12 +11,6 @@ install-dev:
 	python -m pip install --editable .[dev,test]
 	pre-commit install
 
-.PHONY: upgrade-dev
-upgrade-dev:
-	python -m pip install pip-tools
-	pip-compile --upgrade
-	python -m pip install --upgrade --editable .[dev,test]
-
 .PHONY: coverage
 coverage:
 	coverage run -m pytest tests/

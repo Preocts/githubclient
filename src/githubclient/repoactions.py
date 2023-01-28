@@ -5,26 +5,30 @@ Author: Preocts (Preocts#8196)
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 from typing import NamedTuple
 
-from githubclient.apiclient import APIClient
+from githubclient.httpclient import HTTPClient
 
 
-class RepoActions(APIClient):
+class RepoReturn(NamedTuple):
+    """Return values from Repo actions"""
+
+    full_return: dict[str, Any] = {}
+    sha: str = ""
+    url: str = ""
+    html_url: str = ""
+
+
+class RepoActions:
     """Actions for repos in GitHub"""
 
-    class RepoReturn(NamedTuple):
-        """Return values from Repo actions"""
+    logger = logging.getLogger(__name__)
 
-        full_return: dict[str, Any] = {}
-        sha: str = ""
-        url: str = ""
-        html_url: str = ""
-
-    def __init__(self, repo_owner: str, repo_name: str, num_pools: int = 10) -> None:
+    def __init__(self, repo_owner: str, repo_name: str) -> None:
         """Create client class. num_pools = https pool manager"""
-        super().__init__(num_pools=num_pools)
+        self.http_client = HTTPClient()
         self.repo = repo_name
         self.owner = repo_owner
 
@@ -35,9 +39,9 @@ class RepoActions(APIClient):
         self.logger.debug("Requesting SHA of branch: %s", branch_name)
         endpoint = f"/repos/{self.owner}/{self.repo}/branches/{branch_name}"
 
-        result = self.git_get(endpoint)
+        result = self.http_client.git_get(endpoint)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("commit", {}).get("sha", ""),
             url=result.get("url", ""),
@@ -55,9 +59,9 @@ class RepoActions(APIClient):
             "sha": self.get_branch(base_branch).sha,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("object", {}).get("sha", ""),
             url=result.get("object", {}).get("url", ""),
@@ -76,9 +80,9 @@ class RepoActions(APIClient):
             "encoding": "utf-8",
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("sha", ""),
         )
@@ -117,9 +121,9 @@ class RepoActions(APIClient):
             "tree": trees,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("sha", ""),
             url=result.get("url", ""),
@@ -148,9 +152,9 @@ class RepoActions(APIClient):
             "tree": tree_sha,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("sha", ""),
             url=result.get("url", ""),
@@ -168,9 +172,9 @@ class RepoActions(APIClient):
             "sha": commit_sha,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=result.get("object", {}).get("sha", ""),
             url=result.get("object", {}).get("url", ""),
@@ -200,9 +204,9 @@ class RepoActions(APIClient):
             "draft": draft,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
             sha=str(result.get("number", "")),
             url=result.get("url", ""),
@@ -219,8 +223,8 @@ class RepoActions(APIClient):
             "labels": labels,
         }
 
-        result = self.git_post(endpoint, payload)
+        result = self.http_client.git_post(endpoint, payload)
 
-        return self.RepoReturn(
+        return RepoReturn(
             full_return=result,
         )

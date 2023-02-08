@@ -20,7 +20,6 @@ def test_main_cli() -> None:
     """Check CLI input"""
     with patch.object(prfile, "cli_parser") as cli_parser:
         with patch.object(prfile, "main", return_value=1) as main:
-
             with pytest.raises(SystemExit):
                 prfile.main_cli()
 
@@ -60,7 +59,6 @@ def test_main_error() -> None:
         with patch("builtins.input", lambda user_in: "mock"):
             with patch.object(prfile, "run_user_prompt"):
                 with patch.object(prfile, "create_pull_request", return_value=""):
-
                     result = prfile.main(prfile.cli_parser(VALID_FILES))
 
         assert os.path.isfile(filename)
@@ -116,7 +114,6 @@ def test_fill_config() -> None:
     config = prfile.RepoConfig(reponame="Testing")
 
     with patch("builtins.input", lambda user_in: "mock"):
-
         result = prfile.fill_config(config)
 
         for key, value in result._asdict().items():

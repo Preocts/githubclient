@@ -213,7 +213,7 @@ class RepoActions:
             html_url=result.get("html_url", ""),
         )
 
-    def add_lables(self, number: str, labels: list[str]) -> RepoReturn:
+    def add_labels(self, number: str, labels: list[str]) -> RepoReturn:
         """Add label(s) to an existing pull request"""
         # https://docs.github.com/en/rest/reference/issues#add-labels-to-an-issue
 

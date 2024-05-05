@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "githubclient"
-version = "0.5.0"
+version = "0.5.1"
 requires-python = ">=3.8"
 description = "Submit text files to a target repo as a pull request on new branch"
 readme = "README.md"

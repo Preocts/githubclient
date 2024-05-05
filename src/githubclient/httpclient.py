@@ -3,6 +3,7 @@ Abstract base HTTPS API actions against GitHub (CRUD operations)
 
 Author: Preocts <Preocts#8196>
 """
+
 from __future__ import annotations
 
 import json

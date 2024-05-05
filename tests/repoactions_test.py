@@ -1,4 +1,5 @@
 """Unit tests for apiclient.py"""
+
 from __future__ import annotations
 
 import os
@@ -6,6 +7,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+
 from githubclient.repoactions import RepoActions
 from githubclient.repoactions import RepoReturn
 

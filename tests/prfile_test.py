@@ -1,4 +1,5 @@
 """Unit testing for prfile.py"""
+
 from __future__ import annotations
 
 import datetime
@@ -7,8 +8,8 @@ import pathlib
 from unittest.mock import patch
 
 import pytest
-from githubclient import prfile
 
+from githubclient import prfile
 
 NOW = datetime.datetime.now().strftime("%H%M%S")
 TEST_INI = "tests/fixtures/repoconfig_test.ini"

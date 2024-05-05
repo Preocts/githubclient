@@ -1,4 +1,5 @@
 """Unit tests for apiclient.py"""
+
 from __future__ import annotations
 
 import json
@@ -8,6 +9,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
+
 from githubclient.httpclient import HTTPClient
 
 TEST_USER = "Preocts"

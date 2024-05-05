@@ -187,11 +187,11 @@ def test_create_pull_request(repo: RepoActions) -> None:
     assert result.html_url == "mock_html_url"
 
 
-def test_add_lables(repo: RepoActions) -> None:
+def test_add_labels(repo: RepoActions) -> None:
     resp = [{"name": "MockTest01"}, {"name": "MockTest02"}]
     expected_url = "/repos/mock_owner/mock_repo/issues/10/labels"
     with patch.object(repo.http_client, "git_post", return_value=resp) as mock_post:
-        result = repo.add_lables("10", ["MockTest01", "MockTest02"])
+        result = repo.add_labels("10", ["MockTest01", "MockTest02"])
 
     mock_post.assert_called_once_with(
         expected_url,
